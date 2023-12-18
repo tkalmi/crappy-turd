@@ -12,7 +12,7 @@ const bird4 = new Image();
 bird4.src = 'public/bird_4.png';
 
 const BIRD_HEIGHT = canvas.height / 10;
-const BIRD_X = 70;
+const BIRD_X = BIRD_HEIGHT * 1.5;
 
 const bgScale = canvas.height / backgroundImage.height;
 
@@ -63,13 +63,13 @@ function draw(dt: number) {
     backgroundImage.height * bgScale
   );
   // Draw bird shadow
-  const shadowScale = birdY / (canvas.height - 49);
+  const shadowScale = birdY / (canvas.height - 98);
   context.beginPath();
   context.ellipse(
     BIRD_X,
-    canvas.height - 35,
-    27 * (1.5 - shadowScale),
-    10 * (1.5 - shadowScale),
+    canvas.height - 70,
+    54 * (1.5 - shadowScale),
+    20 * (1.5 - shadowScale),
     0,
     0,
     Math.PI * 2
@@ -78,7 +78,7 @@ function draw(dt: number) {
   context.fill();
 
   // Draw bird
-  const birdAngle = (Math.max(-300, Math.min(300, -birdSpeedY)) / 300) * 50;
+  const birdAngle = (Math.max(-600, Math.min(600, -birdSpeedY)) / 600) * 50;
   const bird = (() => {
     if (lastFlapAgo < 30) {
       return bird2;
@@ -109,17 +109,17 @@ function step(timestamp: number) {
   lastTimestamp = timestamp;
   lastFlapAgo += dt;
   if (keysDown['Space'] && spaceNeedsHandling) {
-    birdSpeedY = Math.min(birdSpeedY + 300, 300);
+    birdSpeedY = Math.min(birdSpeedY + 600, 600);
     spaceNeedsHandling = false;
     lastFlapAgo = 0;
   }
   birdY -= (birdSpeedY * dt) / 1_000;
-  birdY = Math.max(26, birdY);
-  if (canvas.height - birdY <= 50) {
+  birdY = Math.max(52, birdY);
+  if (canvas.height - birdY <= 100) {
     looping = false;
     canvas.classList.add('game-over');
   }
-  birdSpeedY -= (40 * (9.81 * dt)) / 1_000;
+  birdSpeedY -= (80 * (9.81 * dt)) / 1_000;
   draw(dt);
   if (looping) {
     requestAnimationFrame(step);

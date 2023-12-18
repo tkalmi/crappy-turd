@@ -11,7 +11,7 @@ bird3.src = 'public/bird_3.png';
 var bird4 = new Image();
 bird4.src = 'public/bird_4.png';
 var BIRD_HEIGHT = canvas.height / 10;
-var BIRD_X = 70;
+var BIRD_X = BIRD_HEIGHT * 1.5;
 var bgScale = canvas.height / backgroundImage.height;
 var dx = 0;
 var birdY = canvas.height / 2 - BIRD_HEIGHT / 2;
@@ -32,13 +32,13 @@ function draw(dt) {
     // drawImage(backgroundImage, backgroundImage.width - dx - 2, 0, 1, 0);
     context.drawImage(backgroundImage, dx - backgroundImage.width + 2, 0, backgroundImage.width, backgroundImage.height, 0, 0, backgroundImage.width * bgScale, backgroundImage.height * bgScale);
     // Draw bird shadow
-    var shadowScale = birdY / (canvas.height - 49);
+    var shadowScale = birdY / (canvas.height - 98);
     context.beginPath();
-    context.ellipse(BIRD_X, canvas.height - 35, 27 * (1.5 - shadowScale), 10 * (1.5 - shadowScale), 0, 0, Math.PI * 2);
+    context.ellipse(BIRD_X, canvas.height - 70, 54 * (1.5 - shadowScale), 20 * (1.5 - shadowScale), 0, 0, Math.PI * 2);
     context.fillStyle = "rgba(0, 0, 0, ".concat(shadowScale * 0.5, ")");
     context.fill();
     // Draw bird
-    var birdAngle = (Math.max(-300, Math.min(300, -birdSpeedY)) / 300) * 50;
+    var birdAngle = (Math.max(-600, Math.min(600, -birdSpeedY)) / 600) * 50;
     var bird = (function () {
         if (lastFlapAgo < 30) {
             return bird2;
@@ -64,17 +64,17 @@ function step(timestamp) {
     lastTimestamp = timestamp;
     lastFlapAgo += dt;
     if (keysDown['Space'] && spaceNeedsHandling) {
-        birdSpeedY = Math.min(birdSpeedY + 300, 300);
+        birdSpeedY = Math.min(birdSpeedY + 600, 600);
         spaceNeedsHandling = false;
         lastFlapAgo = 0;
     }
     birdY -= (birdSpeedY * dt) / 1000;
-    birdY = Math.max(26, birdY);
-    if (canvas.height - birdY <= 50) {
+    birdY = Math.max(52, birdY);
+    if (canvas.height - birdY <= 100) {
         looping = false;
         canvas.classList.add('game-over');
     }
-    birdSpeedY -= (40 * (9.81 * dt)) / 1000;
+    birdSpeedY -= (80 * (9.81 * dt)) / 1000;
     draw(dt);
     if (looping) {
         requestAnimationFrame(step);
