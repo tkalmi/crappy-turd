@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "live-server --port=3000 --entry-file=index.html & tsc index.ts --watch --outfile public/index.js"
+    "dev": "live-server --port=3000 --entry-file=index.html ignore=.git & tsc index.ts --watch --outfile public/index.js"
   },
   "keywords": [],
   "author": "",
