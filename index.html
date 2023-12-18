@@ -3,6 +3,15 @@
 <html>
   <head>
     <title>Flappy Bird</title>
+    <style>
+      :not(.game-over) {
+        filter: grayscale(0%);
+      }
+      .game-over {
+        transition: 600ms ease-out filter;
+        filter: grayscale(100%);
+      }
+    </style>
   </head>
 
   <body>

@@ -72,6 +72,7 @@ function step(timestamp) {
     birdY = Math.max(26, birdY);
     if (canvas.height - birdY <= 50) {
         looping = false;
+        canvas.classList.add('game-over');
     }
     birdSpeedY -= (40 * (9.81 * dt)) / 1000;
     draw(dt);
@@ -94,6 +95,7 @@ addEventListener('keydown', function (event) {
     if (event.code === 'Space') {
         spaceNeedsHandling = true;
         if (!looping) {
+            canvas.classList.remove('game-over');
             reset();
             requestAnimationFrame(step);
         }
