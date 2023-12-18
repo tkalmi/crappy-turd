@@ -1,16 +1,44 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 const backgroundImage = new Image();
-backgroundImage.src = 'public/background.png'; // From https://www.freepik.com/free-vector/game-ground-texture-summer-landscape_31095380.htm#query=game%20background&position=14&from_view=keyword&track=ais&uuid=4c6c4914-7093-4c49-a0fb-e0e7e4db2c8d
+backgroundImage.src = 'public/background.png';
+const bird1 = new Image();
+bird1.src = 'public/bird_1.png';
+const bird2 = new Image();
+bird2.src = 'public/bird_2.png';
+const bird3 = new Image();
+bird3.src = 'public/bird_3.png';
+const bird4 = new Image();
+bird4.src = 'public/bird_4.png';
+
+const BIRD_HEIGHT = canvas.height / 10;
+const BIRD_X = 70;
 
 const bgScale = canvas.height / backgroundImage.height;
 
 let dx = 0;
+let birdY = canvas.height / 2 - BIRD_HEIGHT / 2;
+let birdSpeedY = 0;
+let lastFlapAgo = Infinity;
+
+function drawImage(
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  scale: number,
+  rotation: number
+) {
+  context.setTransform(scale, 0, 0, scale, x, y);
+  context.rotate(rotation);
+  context.drawImage(image, -image.width / 2, -image.height / 2);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+}
 
 function draw(dt: number) {
   dx += dt / 2;
   dx %= backgroundImage.width;
   context.clearRect(0, 0, canvas.width, canvas.height);
+  drawImage(backgroundImage, -dx, 0, 1, 0);
   context.drawImage(
     backgroundImage,
     dx,
@@ -22,6 +50,7 @@ function draw(dt: number) {
     backgroundImage.width * bgScale,
     backgroundImage.height * bgScale
   );
+  // drawImage(backgroundImage, backgroundImage.width - dx - 2, 0, 1, 0);
   context.drawImage(
     backgroundImage,
     dx - backgroundImage.width + 2,
@@ -33,14 +62,92 @@ function draw(dt: number) {
     backgroundImage.width * bgScale,
     backgroundImage.height * bgScale
   );
+  // Draw bird shadow
+  const shadowScale = birdY / (canvas.height - 49);
+  context.beginPath();
+  context.ellipse(
+    BIRD_X,
+    canvas.height - 35,
+    27 * (1.5 - shadowScale),
+    10 * (1.5 - shadowScale),
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fillStyle = `rgba(0, 0, 0, ${shadowScale * 0.5})`;
+  context.fill();
+
+  // Draw bird
+  const birdAngle = (Math.max(-300, Math.min(300, -birdSpeedY)) / 300) * 50;
+  const bird = (() => {
+    if (lastFlapAgo < 30) {
+      return bird2;
+    } else if (lastFlapAgo < 60) {
+      return bird3;
+    } else if (lastFlapAgo < 90) {
+      return bird4;
+    } else {
+      return bird1;
+    }
+  })();
+  drawImage(
+    bird,
+    BIRD_X,
+    birdY,
+    BIRD_HEIGHT / bird.height,
+    birdAngle * (Math.PI / 180)
+  );
 }
+
+let keysDown: Record<string, boolean> = {};
+let spaceNeedsHandling = false;
+let looping = true;
 
 let lastTimestamp = 0;
 function step(timestamp: number) {
   const dt = timestamp - lastTimestamp;
   lastTimestamp = timestamp;
+  lastFlapAgo += dt;
+  if (keysDown['Space'] && spaceNeedsHandling) {
+    birdSpeedY = Math.min(birdSpeedY + 300, 300);
+    spaceNeedsHandling = false;
+    lastFlapAgo = 0;
+  }
+  birdY -= (birdSpeedY * dt) / 1_000;
+  birdY = Math.max(26, birdY);
+  if (canvas.height - birdY <= 50) {
+    looping = false;
+  }
+  birdSpeedY -= (40 * (9.81 * dt)) / 1_000;
   draw(dt);
-  requestAnimationFrame(step);
+  if (looping) {
+    requestAnimationFrame(step);
+  }
+}
+
+function reset() {
+  dx = 0;
+  birdY = canvas.height / 2 - BIRD_HEIGHT / 2;
+  birdSpeedY = 0;
+  lastFlapAgo = Infinity;
+  spaceNeedsHandling = false;
+  looping = true;
+  lastTimestamp = performance.now();
 }
 
 requestAnimationFrame(step);
+
+addEventListener('keydown', (event) => {
+  keysDown[event.code] = true;
+  if (event.code === 'Space') {
+    spaceNeedsHandling = true;
+    if (!looping) {
+      reset();
+      requestAnimationFrame(step);
+    }
+  }
+});
+
+addEventListener('keyup', (event) => {
+  keysDown[event.code] = false;
+});
