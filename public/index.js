@@ -237,10 +237,10 @@ function draw() {
         var _b = getPipeCoordinatesInCanvasSpace(pipe), pipeX = _b.x, pipeY = _b.y;
         drawImage(pipeImag, pipeX + world.pipeWidth / 2, pipeY + world.pipeHeight / 2, world.pipeScale, pipe.ceiling ? Math.PI : 0);
         // Draw pipe hitbox
-        context.beginPath();
-        context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
-        context.fillStyle = "rgba(0, 0, 255, ".concat(shadowScale * 0.9, ")");
-        context.fill();
+        // context.beginPath();
+        // context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
+        // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+        // context.fill();
     }
     // Draw bird
     var birdAngle = world.birdAngle;
@@ -304,6 +304,15 @@ function draw() {
     // );
     // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
     // context.fill();
+    // Draw ceiling and floor hitboxes
+    // context.beginPath();
+    // context.rect(0, 0, canvas.width, 10);
+    // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+    // context.fill();
+    // context.beginPath();
+    // context.rect(0, canvas.height - 30, canvas.width, 10);
+    // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+    // context.fill();
 }
 function getHitBoxCoordinatesInCanvasSpace(rotateRad, xOffset) {
     if (rotateRad === void 0) { rotateRad = 0; }
@@ -357,12 +366,6 @@ function step(timestamp) {
     // Gravity
     world.birdY -= (world.birdSpeedY * dt) / 1000;
     world.birdY = Math.max(46, world.birdY);
-    // Hit the floor or ceiling
-    if (canvas.height - world.birdY <= world.birdBigHitBoxRadius ||
-        world.birdY <= world.birdBigHitBoxRadius) {
-        world.isLooping = false;
-        canvas.classList.add('game-over');
-    }
     // Delete pipes that are off-screen
     world.pipes = world.pipes.filter(function (pipe) {
         return world.pipeWidth + canvas.width - (timestamp - pipe.t) > -world.pipeWidth;
@@ -387,14 +390,27 @@ function step(timestamp) {
         world.lastPipeCreated = timestamp;
         world.nextPipeIn = 1000 + Math.random() * 1000;
     }
-    // Hit pipe
+    var hitbox1 = getHitBoxCoordinatesInCanvasSpace();
+    var hitbox2 = getHitBoxCoordinatesInCanvasSpace(world.birdAngle, 0.15 * world.birdX);
+    var hitbox3 = getHitBoxCoordinatesInCanvasSpace(world.birdAngle, -0.15 * world.birdX);
+    // Detect if hit the ceiling
+    if (detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
+        detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
+        detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {
+        world.isLooping = false;
+        canvas.classList.add('game-over');
+    }
+    // Detect if hit the floor
+    if (detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
+        detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
+        detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {
+        world.isLooping = false;
+        canvas.classList.add('game-over');
+    }
+    // Detect if hit a pipe
     for (var _i = 0, _a = world.pipes; _i < _a.length; _i++) {
         var pipeObj = _a[_i];
         var pipe = getPipeCoordinatesInCanvasSpace(pipeObj);
-        var birdAngle = Math.PI * (world.birdAngle / 180);
-        var hitbox1 = getHitBoxCoordinatesInCanvasSpace();
-        var hitbox2 = getHitBoxCoordinatesInCanvasSpace(world.birdAngle, 0.15 * world.birdX);
-        var hitbox3 = getHitBoxCoordinatesInCanvasSpace(world.birdAngle, -0.15 * world.birdX);
         if (detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
             detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
             detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {

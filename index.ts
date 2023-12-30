@@ -223,10 +223,10 @@ function draw() {
     );
 
     // Draw pipe hitbox
-    context.beginPath();
-    context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
-    context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
-    context.fill();
+    // context.beginPath();
+    // context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
+    // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+    // context.fill();
   }
 
   // Draw bird
@@ -295,6 +295,17 @@ function draw() {
   //   Math.PI * 2
   // );
   // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
+  // context.fill();
+
+  // Draw ceiling and floor hitboxes
+  // context.beginPath();
+  // context.rect(0, 0, canvas.width, 10);
+  // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+  // context.fill();
+
+  // context.beginPath();
+  // context.rect(0, canvas.height - 30, canvas.width, 10);
+  // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
   // context.fill();
 }
 
@@ -367,15 +378,6 @@ function step(timestamp: number) {
   world.birdY -= (world.birdSpeedY * dt) / 1_000;
   world.birdY = Math.max(46, world.birdY);
 
-  // Hit the floor or ceiling
-  if (
-    canvas.height - world.birdY <= world.birdBigHitBoxRadius ||
-    world.birdY <= world.birdBigHitBoxRadius
-  ) {
-    world.isLooping = false;
-    canvas.classList.add('game-over');
-  }
-
   // Delete pipes that are off-screen
   world.pipes = world.pipes.filter(
     (pipe) =>
@@ -403,19 +405,58 @@ function step(timestamp: number) {
     world.nextPipeIn = 1_000 + Math.random() * 1_000;
   }
 
-  // Hit pipe
+  const hitbox1 = getHitBoxCoordinatesInCanvasSpace();
+  const hitbox2 = getHitBoxCoordinatesInCanvasSpace(
+    world.birdAngle,
+    0.15 * world.birdX
+  );
+  const hitbox3 = getHitBoxCoordinatesInCanvasSpace(
+    world.birdAngle,
+    -0.15 * world.birdX
+  );
+
+  // Detect if hit the ceiling
+  if (
+    detectCollision(
+      { x: 0, w: canvas.width, y: 0, h: 10 },
+      { ...hitbox1, r: world.birdBigHitBoxRadius }
+    ) ||
+    detectCollision(
+      { x: 0, w: canvas.width, y: 0, h: 10 },
+      { ...hitbox2, r: world.birdSmallHitBoxRadius }
+    ) ||
+    detectCollision(
+      { x: 0, w: canvas.width, y: 0, h: 10 },
+      { ...hitbox3, r: world.birdSmallHitBoxRadius }
+    )
+  ) {
+    world.isLooping = false;
+    canvas.classList.add('game-over');
+  }
+
+  // Detect if hit the floor
+  if (
+    detectCollision(
+      { x: 0, w: canvas.width, y: canvas.height - 30, h: 10 },
+      { ...hitbox1, r: world.birdBigHitBoxRadius }
+    ) ||
+    detectCollision(
+      { x: 0, w: canvas.width, y: canvas.height - 30, h: 10 },
+      { ...hitbox2, r: world.birdSmallHitBoxRadius }
+    ) ||
+    detectCollision(
+      { x: 0, w: canvas.width, y: canvas.height - 30, h: 10 },
+      { ...hitbox3, r: world.birdSmallHitBoxRadius }
+    )
+  ) {
+    world.isLooping = false;
+    canvas.classList.add('game-over');
+  }
+
+  // Detect if hit a pipe
   for (const pipeObj of world.pipes) {
     const pipe = getPipeCoordinatesInCanvasSpace(pipeObj);
-    const birdAngle = Math.PI * (world.birdAngle / 180);
-    const hitbox1 = getHitBoxCoordinatesInCanvasSpace();
-    const hitbox2 = getHitBoxCoordinatesInCanvasSpace(
-      world.birdAngle,
-      0.15 * world.birdX
-    );
-    const hitbox3 = getHitBoxCoordinatesInCanvasSpace(
-      world.birdAngle,
-      -0.15 * world.birdX
-    );
+
     if (
       detectCollision(
         { ...pipe, w: world.pipeWidth, h: world.pipeHeight },
