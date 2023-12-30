@@ -63,17 +63,21 @@ function step(timestamp) {
     var dt = timestamp - lastTimestamp;
     lastTimestamp = timestamp;
     lastFlapAgo += dt;
+    // Thrust upwards
     if (keysDown['Space'] && spaceNeedsHandling) {
         birdSpeedY = Math.min(birdSpeedY + 600, 600);
         spaceNeedsHandling = false;
         lastFlapAgo = 0;
     }
+    // Gravity
     birdY -= (birdSpeedY * dt) / 1000;
-    birdY = Math.max(52, birdY);
-    if (canvas.height - birdY <= 100) {
+    birdY = Math.max(46, birdY);
+    // Hit the floor or ceiling
+    if (canvas.height - birdY <= 100 || birdY <= 46) {
         looping = false;
         canvas.classList.add('game-over');
     }
+    // Accelerate downwards
     birdSpeedY -= (80 * (9.81 * dt)) / 1000;
     draw(dt);
     if (looping) {
