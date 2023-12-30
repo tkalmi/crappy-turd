@@ -13,6 +13,126 @@ bird4.src = 'public/bird_4.png';
 const pipeImag = new Image();
 pipeImag.src = 'public/pipe.png';
 
+class World {
+  #BG_SCALE = canvas.height / backgroundImage.height;
+  #BIRD_HEIGHT = canvas.height / 10;
+  #BIRD_SCALE = this.#BIRD_HEIGHT / bird1.height;
+  #BIRD_WIDTH = bird1.width * this.#BIRD_SCALE;
+  #BIRD_BIG_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.4;
+  #BIRD_SMALL_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.3;
+  #BIRD_SMALL_HIT_BOX_1_OFFSET = this.#BIRD_HEIGHT * 0.25;
+  #BIRD_SMALL_HIT_BOX_2_OFFSET = this.#BIRD_HEIGHT * 0.2;
+  #BIRD_X = this.#BIRD_HEIGHT * 1.5;
+  #PIPE_SCALE = 4;
+  #PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
+  #PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+
+  dx = 0;
+  birdY = canvas.height / 2 - this.#BIRD_HEIGHT / 2;
+  birdSpeedY = 0;
+  lastFlapAgo = Infinity;
+  lastPipeCreated = 0;
+  nextPipeIn = 0;
+  keysDown: Record<string, boolean> = {};
+  spaceNeedsHandling = false;
+  isLooping = true;
+  lastTimestamp = 0;
+  pipes: Pipe[] = [];
+
+  constructor() {
+    this.#init();
+    addEventListener('resize', () => {
+      this.#init();
+    });
+
+    addEventListener('keydown', (event) => {
+      this.keysDown[event.code] = true;
+      if (event.code === 'Space') {
+        this.spaceNeedsHandling = true;
+        if (!this.isLooping) {
+          canvas.classList.remove('game-over');
+          this.reset();
+          requestAnimationFrame(step);
+        }
+      }
+    });
+
+    addEventListener('keyup', (event) => {
+      this.keysDown[event.code] = false;
+    });
+  }
+
+  #init() {
+    this.#BG_SCALE = canvas.height / backgroundImage.height;
+    this.#BIRD_HEIGHT = canvas.height / 10;
+    this.#BIRD_SCALE = this.#BIRD_HEIGHT / bird1.height;
+    this.#BIRD_WIDTH = bird1.width * this.#BIRD_SCALE;
+    this.#BIRD_BIG_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.4;
+    this.#BIRD_SMALL_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.3;
+    this.#BIRD_SMALL_HIT_BOX_1_OFFSET = this.#BIRD_HEIGHT * 0.25;
+    this.#BIRD_SMALL_HIT_BOX_2_OFFSET = this.#BIRD_HEIGHT * 0.2;
+    this.#BIRD_X = this.#BIRD_HEIGHT * 1.5;
+    this.#PIPE_SCALE = 4;
+    this.#PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
+    this.#PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+  }
+
+  reset() {
+    this.dx = 0;
+    this.birdY = canvas.height / 2 - this.birdHeight / 2;
+    this.birdSpeedY = 0;
+    this.lastFlapAgo = Infinity;
+    this.spaceNeedsHandling = false;
+    this.isLooping = true;
+    this.lastTimestamp = performance.now();
+  }
+
+  get bgScale(): number {
+    return this.#BG_SCALE;
+  }
+  get birdHeight(): number {
+    return this.#BIRD_HEIGHT;
+  }
+  get birdScale(): number {
+    return this.#BIRD_SCALE;
+  }
+  get birdWidth(): number {
+    return this.#BIRD_WIDTH;
+  }
+  get birdBigHitBoxRadius(): number {
+    return this.#BIRD_BIG_HIT_BOX_RADIUS;
+  }
+  get birdSmallHitBoxRadius(): number {
+    return this.#BIRD_SMALL_HIT_BOX_RADIUS;
+  }
+  get birdSmallHitBox1Offset(): number {
+    return this.#BIRD_SMALL_HIT_BOX_1_OFFSET;
+  }
+  get birdSmallHitBox2Offset(): number {
+    return this.#BIRD_SMALL_HIT_BOX_2_OFFSET;
+  }
+  get birdX(): number {
+    return this.#BIRD_X;
+  }
+  get pipeScale(): number {
+    return this.#PIPE_SCALE;
+  }
+  get pipeHeight(): number {
+    return this.#PIPE_HEIGHT;
+  }
+  get pipeWidth(): number {
+    return this.#PIPE_WIDTH;
+  }
+
+  get birdAngle(): number {
+    const birdAngleDeg =
+      (Math.max(-600, Math.min(600, -world.birdSpeedY)) / 600) * 50;
+    return birdAngleDeg * (Math.PI / 180);
+  }
+}
+
+const world = new World();
+
 type Pipe = {
   t: number;
   ceiling: boolean;
@@ -20,10 +140,10 @@ type Pipe = {
 };
 
 function getPipeCoordinatesInCanvasSpace(pipe: Pipe) {
-  const x = canvas.width - (lastTimestamp - pipe.t);
+  const x = canvas.width - (world.lastTimestamp - pipe.t);
   const y = pipe.ceiling
-    ? pipe.height * bgScale - PIPE_HEIGHT
-    : (canvas.height - pipe.height) * bgScale;
+    ? pipe.height * world.bgScale - world.pipeHeight
+    : (canvas.height - pipe.height) * world.bgScale;
   return {
     x,
     y,
@@ -32,28 +152,10 @@ function getPipeCoordinatesInCanvasSpace(pipe: Pipe) {
 
 function getBirdCoordinatesInCanvasSpace() {
   return {
-    x: BIRD_X,
-    y: birdY,
+    x: world.birdX,
+    y: world.birdY,
   };
 }
-
-const BIRD_HEIGHT = canvas.height / 10;
-const BIRD_SCALE = BIRD_HEIGHT / bird1.height;
-const BIRD_WIDTH = bird1.width * BIRD_SCALE;
-const BIRD_HIT_BOX_RADIUS = BIRD_HEIGHT * 0.6;
-const BIRD_X = BIRD_HEIGHT * 1.5;
-const PIPE_SCALE = 4;
-const PIPE_HEIGHT = pipeImag.height * PIPE_SCALE;
-const PIPE_WIDTH = pipeImag.width * PIPE_SCALE;
-
-const bgScale = canvas.height / backgroundImage.height;
-
-let dx = 0;
-let birdY = canvas.height / 2 - BIRD_HEIGHT / 2;
-let birdSpeedY = 0;
-let lastFlapAgo = Infinity;
-let lastPipeCreated = 0;
-let nextPipeIn = 0;
 
 function drawImage(
   image: HTMLImageElement,
@@ -72,32 +174,32 @@ function draw() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.drawImage(
     backgroundImage,
-    dx,
+    world.dx,
     0,
     backgroundImage.width,
     backgroundImage.height,
     0,
     0,
-    backgroundImage.width * bgScale,
-    backgroundImage.height * bgScale
+    backgroundImage.width * world.bgScale,
+    backgroundImage.height * world.bgScale
   );
   context.drawImage(
     backgroundImage,
-    dx - backgroundImage.width + 2,
+    world.dx - backgroundImage.width + 2,
     0,
     backgroundImage.width,
     backgroundImage.height,
     0,
     0,
-    backgroundImage.width * bgScale,
-    backgroundImage.height * bgScale
+    backgroundImage.width * world.bgScale,
+    backgroundImage.height * world.bgScale
   );
 
   // Draw bird shadow
-  const shadowScale = birdY / (canvas.height - 98);
+  const shadowScale = world.birdY / (canvas.height - 98);
   context.beginPath();
   context.ellipse(
-    BIRD_X,
+    world.birdX,
     canvas.height - 70,
     54 * (1.5 - shadowScale),
     20 * (1.5 - shadowScale),
@@ -109,183 +211,235 @@ function draw() {
   context.fill();
 
   // Draw pipes
-  for (const pipe of pipes) {
+  for (const pipe of world.pipes) {
     const { x: pipeX, y: pipeY } = getPipeCoordinatesInCanvasSpace(pipe);
-
-    // Draw pipe hitbox
-    // context.beginPath();
-    // context.rect(pipeX, pipeY, PIPE_WIDTH, PIPE_HEIGHT);
-    // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
-    // context.fill();
 
     drawImage(
       pipeImag,
-      pipeX + PIPE_WIDTH / 2,
-      pipeY + PIPE_HEIGHT / 2,
-      PIPE_SCALE,
+      pipeX + world.pipeWidth / 2,
+      pipeY + world.pipeHeight / 2,
+      world.pipeScale,
       pipe.ceiling ? Math.PI : 0
     );
+
+    // Draw pipe hitbox
+    context.beginPath();
+    context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
+    context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
+    context.fill();
   }
 
-  // Draw bird hitbox
-  // context.beginPath();
-  // context.ellipse(
-  //   BIRD_X,
-  //   birdY,
-  //   BIRD_HIT_BOX_RADIUS,
-  //   BIRD_HIT_BOX_RADIUS,
-  //   0,
-  //   0,
-  //   Math.PI * 2
-  // );
-  // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
-  // context.fill();
-
   // Draw bird
-  const birdAngle = (Math.max(-600, Math.min(600, -birdSpeedY)) / 600) * 50;
+
+  const birdAngle = world.birdAngle;
   const bird = (() => {
-    if (lastFlapAgo < 30) {
+    if (world.lastFlapAgo < 30) {
       return bird2;
-    } else if (lastFlapAgo < 60) {
+    } else if (world.lastFlapAgo < 60) {
       return bird3;
-    } else if (lastFlapAgo < 90) {
+    } else if (world.lastFlapAgo < 90) {
       return bird4;
     } else {
       return bird1;
     }
   })();
-  drawImage(bird, BIRD_X, birdY, BIRD_SCALE, birdAngle * (Math.PI / 180));
+  drawImage(
+    bird,
+    world.birdX * 0.98,
+    world.birdY * 0.98,
+    world.birdScale,
+    birdAngle
+  );
+
+  // Draw bird hitboxes
+  // context.beginPath();
+  // context.ellipse(
+  //   world.birdX,
+  //   world.birdY,
+  //   world.birdBigHitBoxRadius,
+  //   world.birdBigHitBoxRadius,
+  //   birdAngle,
+  //   0,
+  //   Math.PI * 2
+  // );
+  // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
+  // context.fill();
+  // const smallHitBox1Origin = getHitBoxCoordinatesInCanvasSpace(
+  //   birdAngle,
+  //   0.15 * world.birdX
+  // );
+  // context.beginPath();
+  // context.ellipse(
+  //   smallHitBox1Origin.x,
+  //   smallHitBox1Origin.y,
+  //   world.birdSmallHitBoxRadius,
+  //   world.birdSmallHitBoxRadius,
+  //   birdAngle,
+  //   0,
+  //   Math.PI * 2
+  // );
+  // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
+  // context.fill();
+  // const smallHitBox2Origin = getHitBoxCoordinatesInCanvasSpace(
+  //   birdAngle,
+  //   -0.15 * world.birdX
+  // );
+  // context.beginPath();
+  // context.ellipse(
+  //   smallHitBox2Origin.x,
+  //   smallHitBox2Origin.y,
+  //   world.birdSmallHitBoxRadius,
+  //   world.birdSmallHitBoxRadius,
+  //   birdAngle,
+  //   0,
+  //   Math.PI * 2
+  // );
+  // context.fillStyle = `rgba(255, 0, 0, ${shadowScale * 0.9})`;
+  // context.fill();
 }
 
-let keysDown: Record<string, boolean> = {};
-let spaceNeedsHandling = false;
-let looping = true;
+function getHitBoxCoordinatesInCanvasSpace(
+  rotateRad: number = 0,
+  xOffset: number = 0
+) {
+  const origin = {
+    x: xOffset,
+    y: 0,
+  };
+  let xNew = origin.x * Math.cos(rotateRad);
+  let yNew = origin.x * Math.sin(rotateRad);
+  origin.x = xNew + world.birdX;
+  origin.y = yNew + world.birdY;
 
-let lastTimestamp = 0;
-let pipes: Pipe[] = [];
+  return origin;
+}
+
+function detectCollision(
+  rect: { x: number; y: number; w: number; h: number },
+  circle: { x: number; y: number; r: number }
+) {
+  let testX = circle.x;
+  let testY = circle.y;
+
+  // Bird is to the left of the pipe
+  if (circle.x < rect.x) {
+    testX = rect.x;
+  }
+
+  // Bird is to the right of the pipe
+  else if (circle.x > rect.x + rect.w) {
+    testX = rect.x + rect.w;
+  }
+
+  // Bird is above the pipe
+  if (circle.y < rect.y) {
+    testY = rect.y;
+  }
+
+  // Bird is below the pipe
+  else if (circle.y > rect.y + rect.h) {
+    testY = rect.y + rect.h;
+  }
+
+  const distX = circle.x - testX;
+  const distY = circle.y - testY;
+  const distance = Math.sqrt(distX ** 2 + distY ** 2);
+
+  return distance <= circle.r;
+}
 
 function step(timestamp: number) {
-  const dt = timestamp - lastTimestamp;
+  const dt = timestamp - world.lastTimestamp;
 
-  dx += dt / 2;
-  dx %= backgroundImage.width;
+  world.dx += dt / 2;
+  world.dx %= backgroundImage.width;
 
-  lastTimestamp = timestamp;
-  lastFlapAgo += dt;
+  world.lastTimestamp = timestamp;
+  world.lastFlapAgo += dt;
 
   // Thrust upwards
-  if (keysDown['Space'] && spaceNeedsHandling) {
-    birdSpeedY = Math.min(birdSpeedY + 600, 600);
-    spaceNeedsHandling = false;
-    lastFlapAgo = 0;
+  if (world.keysDown['Space'] && world.spaceNeedsHandling) {
+    world.birdSpeedY = Math.min(world.birdSpeedY + 600, 600);
+    world.spaceNeedsHandling = false;
+    world.lastFlapAgo = 0;
   }
   // Gravity
-  birdY -= (birdSpeedY * dt) / 1_000;
-  birdY = Math.max(46, birdY);
+  world.birdY -= (world.birdSpeedY * dt) / 1_000;
+  world.birdY = Math.max(46, world.birdY);
 
   // Hit the floor or ceiling
   if (
-    canvas.height - birdY <= BIRD_HIT_BOX_RADIUS ||
-    birdY <= BIRD_HIT_BOX_RADIUS
+    canvas.height - world.birdY <= world.birdBigHitBoxRadius ||
+    world.birdY <= world.birdBigHitBoxRadius
   ) {
-    looping = false;
+    world.isLooping = false;
     canvas.classList.add('game-over');
   }
 
   // Delete pipes that are off-screen
-  pipes = pipes.filter(
-    (pipe) => PIPE_WIDTH + canvas.width - (timestamp - pipe.t) > -PIPE_WIDTH
+  world.pipes = world.pipes.filter(
+    (pipe) =>
+      world.pipeWidth + canvas.width - (timestamp - pipe.t) > -world.pipeWidth
   );
   // Generate new pipes
-  if (timestamp - lastPipeCreated > nextPipeIn) {
+  if (timestamp - world.lastPipeCreated > world.nextPipeIn) {
     const pipeHeight =
       Math.random() * canvas.height * 0.3 + canvas.height * 0.2;
     const ceiling = Math.random() > 0.5;
-    pipes.push({
+    world.pipes.push({
       t: timestamp,
       ceiling,
       height: pipeHeight,
     });
     const createTwoPipes = Math.random() > 0.5;
     if (createTwoPipes) {
-      pipes.push({
+      world.pipes.push({
         t: timestamp,
         ceiling: !ceiling,
         height: canvas.height * (1 - (Math.random() * 0.3 + 0.25)) - pipeHeight,
       });
     }
-    lastPipeCreated = timestamp;
-    nextPipeIn = 1_000 + Math.random() * 1_000;
+    world.lastPipeCreated = timestamp;
+    world.nextPipeIn = 1_000 + Math.random() * 1_000;
   }
 
   // Hit pipe
-  for (const pipeObj of pipes) {
-    const bird = getBirdCoordinatesInCanvasSpace();
+  for (const pipeObj of world.pipes) {
     const pipe = getPipeCoordinatesInCanvasSpace(pipeObj);
-    let testX = bird.x;
-    let testY = bird.y;
-
-    // Bird is to the left of the pipe
-    if (bird.x < pipe.x) {
-      testX = pipe.x;
-    }
-
-    // Bird is to the right of the pipe
-    else if (bird.x > pipe.x + PIPE_WIDTH) {
-      testX = pipe.x + PIPE_WIDTH;
-    }
-
-    // Bird is above the pipe
-    if (bird.y < pipe.y) {
-      testY = pipe.y;
-    }
-
-    // Bird is below the pipe
-    else if (bird.y > pipe.y + PIPE_HEIGHT) {
-      testY = pipe.y + PIPE_HEIGHT;
-    }
-
-    const distX = bird.x - testX;
-    const distY = bird.y - testY;
-    const distance = Math.sqrt(distX ** 2 + distY ** 2);
-
-    if (distance <= BIRD_HIT_BOX_RADIUS) {
-      looping = false;
+    const birdAngle = Math.PI * (world.birdAngle / 180);
+    const hitbox1 = getHitBoxCoordinatesInCanvasSpace();
+    const hitbox2 = getHitBoxCoordinatesInCanvasSpace(
+      world.birdAngle,
+      0.15 * world.birdX
+    );
+    const hitbox3 = getHitBoxCoordinatesInCanvasSpace(
+      world.birdAngle,
+      -0.15 * world.birdX
+    );
+    if (
+      detectCollision(
+        { ...pipe, w: world.pipeWidth, h: world.pipeHeight },
+        { ...hitbox1, r: world.birdBigHitBoxRadius }
+      ) ||
+      detectCollision(
+        { ...pipe, w: world.pipeWidth, h: world.pipeHeight },
+        { ...hitbox2, r: world.birdSmallHitBoxRadius }
+      ) ||
+      detectCollision(
+        { ...pipe, w: world.pipeWidth, h: world.pipeHeight },
+        { ...hitbox3, r: world.birdSmallHitBoxRadius }
+      )
+    ) {
+      world.isLooping = false;
       canvas.classList.add('game-over');
     }
   }
   // Accelerate downwards
-  birdSpeedY -= (80 * (9.81 * dt)) / 1_000;
+  world.birdSpeedY -= (80 * (9.81 * dt)) / 1_000;
   draw();
-  if (looping) {
+  if (world.isLooping) {
     requestAnimationFrame(step);
   }
 }
 
-function reset() {
-  dx = 0;
-  birdY = canvas.height / 2 - BIRD_HEIGHT / 2;
-  birdSpeedY = 0;
-  lastFlapAgo = Infinity;
-  spaceNeedsHandling = false;
-  looping = true;
-  lastTimestamp = performance.now();
-}
-
 requestAnimationFrame(step);
-
-addEventListener('keydown', (event) => {
-  keysDown[event.code] = true;
-  if (event.code === 'Space') {
-    spaceNeedsHandling = true;
-    if (!looping) {
-      canvas.classList.remove('game-over');
-      reset();
-      requestAnimationFrame(step);
-    }
-  }
-});
-
-addEventListener('keyup', (event) => {
-  keysDown[event.code] = false;
-});
