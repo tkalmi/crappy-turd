@@ -3,7 +3,7 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 const startText = document.getElementById('start-game') as HTMLParagraphElement;
-const BASE_URL = window.location.origin;
+const BASE_URL = window.location.href.replace(/\/$/, '');
 const backgroundImage = new Image();
 backgroundImage.src = `${BASE_URL}/public/background.png`;
 const bird1 = new Image();
