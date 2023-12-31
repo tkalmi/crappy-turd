@@ -508,11 +508,6 @@ function draw() {
     canvas.width - world.fontSize * 13,
     world.fontSize * 4
   );
-  drawText(
-    `Tap spacebar to flap`,
-    canvas.width / 2 - world.fontSize * 6,
-    canvas.height - world.fontSize
-  );
 
   // Draw game over
   if (!world.isLooping) {
@@ -526,6 +521,12 @@ function draw() {
       'Press spacebar to restart',
       canvas.width / 2 - world.fontSize * 7.5,
       canvas.height / 2 + world.fontSize * 1.5
+    );
+  } else {
+    drawText(
+      `Tap spacebar to flap`,
+      canvas.width / 2 - world.fontSize * 6,
+      canvas.height - world.fontSize
     );
   }
 }
