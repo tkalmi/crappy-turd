@@ -76,11 +76,11 @@ async function loadAudioBuffers() {
     url: `${BASE_URL}/public/mixkit-losing-drums-2023.wav`,
   };
   const audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
-  console.log('AUDIO URLS', audioUrls);
   for (const { key, url } of audioUrls) {
     const track = audioContext.createBufferSource();
     track.buffer = await fetch(url)
       .then((res) => {
+        console.log('AUDIO URLS', audioUrls);
         console.log('RES', res);
         return res.arrayBuffer();
       })
