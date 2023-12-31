@@ -80,8 +80,6 @@ async function loadAudioBuffers() {
     const track = audioContext.createBufferSource();
     track.buffer = await fetch(url)
       .then((res) => {
-        console.log('AUDIO URLS', audioUrls);
-        console.log('RES', res);
         return res.arrayBuffer();
       })
       .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));

@@ -61,7 +61,7 @@ var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _W
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var startText = document.getElementById('start-game');
-var BASE_URL = window.location.origin;
+var BASE_URL = window.location.href.replace(/\/$/, '');
 var backgroundImage = new Image();
 backgroundImage.src = "".concat(BASE_URL, "/public/background.png");
 var bird1 = new Image();
@@ -143,7 +143,6 @@ function loadAudioBuffers() {
                     _b = track;
                     return [4 /*yield*/, fetch(url)
                             .then(function (res) {
-                            console.log('RES', res);
                             return res.arrayBuffer();
                         })
                             .then(function (arrayBuffer) { return audioContext.decodeAudioData(arrayBuffer); })];
