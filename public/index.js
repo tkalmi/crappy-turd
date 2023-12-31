@@ -539,6 +539,7 @@ function draw() {
     drawText("Time survived: ".concat(((world.lastTimestamp - world.gameStarted) /
         1000).toFixed(2), "s"), canvas.width - world.fontSize * 13, world.fontSize * 2.5);
     drawText("Flap counter: ".concat(world.flapsUsed), canvas.width - world.fontSize * 13, world.fontSize * 4);
+    drawText("Tap spacebar to flap", canvas.width / 2 - world.fontSize * 6, canvas.height - world.fontSize);
     // Draw game over
     if (!world.isLooping) {
         drawText('Game Over', canvas.width / 2 - world.fontSize * 5.5, canvas.height / 2, world.fontSize * 2);
