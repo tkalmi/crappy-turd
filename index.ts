@@ -4,19 +4,31 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 const startText = document.getElementById('start-game') as HTMLParagraphElement;
 const BASE_URL = window.location.href.replace(/\/$/, '');
-const backgroundImage = new Image();
-backgroundImage.src = `${BASE_URL}/public/background.png`;
-const bird1 = new Image();
-bird1.src = `${BASE_URL}/public/bird_1.png`;
-const bird2 = new Image();
-bird2.src = `${BASE_URL}/public/bird_2.png`;
-const bird3 = new Image();
-bird3.src = `${BASE_URL}/public/bird_3.png`;
-const bird4 = new Image();
-bird4.src = `${BASE_URL}/public/bird_4.png`;
-const pipeImag = new Image();
-pipeImag.src = `${BASE_URL}/public/pipe.png`;
 const loadingText = document.getElementById('loading') as HTMLParagraphElement;
+
+type ImageKey = 'bird1' | 'bird2' | 'bird3' | 'bird4' | 'pipe' | 'background';
+
+const imageLibrary: Partial<Record<ImageKey, HTMLImageElement>> = {};
+
+async function loadImages() {
+  const images: Array<{ key: ImageKey; url: string }> = [
+    { key: 'bird1', url: `${BASE_URL}/public/bird_1.png` },
+    { key: 'bird2', url: `${BASE_URL}/public/bird_2.png` },
+    { key: 'bird3', url: `${BASE_URL}/public/bird_3.png` },
+    { key: 'bird4', url: `${BASE_URL}/public/bird_4.png` },
+    { key: 'pipe', url: `${BASE_URL}/public/pipe.png` },
+    { key: 'background', url: `${BASE_URL}/public/background.png` },
+  ];
+
+  for (const { key, url } of images) {
+    const image = new Image();
+    const objectUrl = await fetch(url)
+      .then((res) => res.blob())
+      .then((blob) => URL.createObjectURL(blob));
+    image.src = objectUrl;
+    imageLibrary[key] = image;
+  }
+}
 
 /******************************************************************************/
 
@@ -98,18 +110,18 @@ type Pipe = {
 };
 
 class World {
-  #BG_SCALE = canvas.height / backgroundImage.height;
+  #BG_SCALE = canvas.height / imageLibrary.background!.height;
   #BIRD_HEIGHT = canvas.height / 10;
-  #BIRD_SCALE = this.#BIRD_HEIGHT / bird1.height;
-  #BIRD_WIDTH = bird1.width * this.#BIRD_SCALE;
+  #BIRD_SCALE = this.#BIRD_HEIGHT / imageLibrary.bird1!.height;
+  #BIRD_WIDTH = imageLibrary.bird1!.width * this.#BIRD_SCALE;
   #BIRD_BIG_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.4;
   #BIRD_SMALL_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.3;
   #BIRD_SMALL_HIT_BOX_1_OFFSET = this.#BIRD_HEIGHT * 0.25;
   #BIRD_SMALL_HIT_BOX_2_OFFSET = this.#BIRD_HEIGHT * 0.2;
   #BIRD_X = this.#BIRD_HEIGHT * 1.5;
   #PIPE_SCALE = 4;
-  #PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
-  #PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+  #PIPE_HEIGHT = imageLibrary.pipe!.height * this.#PIPE_SCALE;
+  #PIPE_WIDTH = imageLibrary.pipe!.width * this.#PIPE_SCALE;
   #FONT_SIZE = canvas.height * 0.05;
 
   dx = 0;
@@ -153,18 +165,18 @@ class World {
   }
 
   #init() {
-    this.#BG_SCALE = canvas.height / backgroundImage.height;
+    this.#BG_SCALE = canvas.height / imageLibrary.background!.height;
     this.#BIRD_HEIGHT = canvas.height / 10;
-    this.#BIRD_SCALE = this.#BIRD_HEIGHT / bird1.height;
-    this.#BIRD_WIDTH = bird1.width * this.#BIRD_SCALE;
+    this.#BIRD_SCALE = this.#BIRD_HEIGHT / imageLibrary.bird1!.height;
+    this.#BIRD_WIDTH = imageLibrary.bird1!.width * this.#BIRD_SCALE;
     this.#BIRD_BIG_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.4;
     this.#BIRD_SMALL_HIT_BOX_RADIUS = this.#BIRD_HEIGHT * 0.3;
     this.#BIRD_SMALL_HIT_BOX_1_OFFSET = this.#BIRD_HEIGHT * 0.25;
     this.#BIRD_SMALL_HIT_BOX_2_OFFSET = this.#BIRD_HEIGHT * 0.2;
     this.#BIRD_X = this.#BIRD_HEIGHT * 1.5;
     this.#PIPE_SCALE = 4;
-    this.#PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
-    this.#PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+    this.#PIPE_HEIGHT = imageLibrary.pipe!.height * this.#PIPE_SCALE;
+    this.#PIPE_WIDTH = imageLibrary.pipe!.width * this.#PIPE_SCALE;
     this.#FONT_SIZE = canvas.height * 0.05;
   }
 
@@ -233,7 +245,7 @@ class World {
     return birdAngleDeg * (Math.PI / 180);
   }
 }
-const world = new World();
+let world: World;
 
 /******************************************************************************/
 
@@ -341,26 +353,26 @@ function drawImage(
 function draw() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.drawImage(
-    backgroundImage,
+    imageLibrary.background!,
     world.dx,
     0,
-    backgroundImage.width,
-    backgroundImage.height,
+    imageLibrary.background!.width,
+    imageLibrary.background!.height,
     0,
     0,
-    backgroundImage.width * world.bgScale,
-    backgroundImage.height * world.bgScale
+    imageLibrary.background!.width * world.bgScale,
+    imageLibrary.background!.height * world.bgScale
   );
   context.drawImage(
-    backgroundImage,
-    world.dx - backgroundImage.width + 2,
+    imageLibrary.background!,
+    world.dx - imageLibrary.background!.width + 2,
     0,
-    backgroundImage.width,
-    backgroundImage.height,
+    imageLibrary.background!.width,
+    imageLibrary.background!.height,
     0,
     0,
-    backgroundImage.width * world.bgScale,
-    backgroundImage.height * world.bgScale
+    imageLibrary.background!.width * world.bgScale,
+    imageLibrary.background!.height * world.bgScale
   );
 
   // Draw bird shadow
@@ -383,7 +395,7 @@ function draw() {
     const { x: pipeX, y: pipeY } = getPipeCoordinatesInCanvasSpace(pipe);
 
     drawImage(
-      pipeImag,
+      imageLibrary.pipe!,
       pipeX + world.pipeWidth / 2,
       pipeY + world.pipeHeight / 2,
       world.pipeScale,
@@ -402,13 +414,13 @@ function draw() {
   const birdAngle = world.birdAngle;
   const bird = (() => {
     if (world.lastFlapAgo < 30) {
-      return bird2;
+      return imageLibrary.bird2!;
     } else if (world.lastFlapAgo < 60) {
-      return bird3;
+      return imageLibrary.bird3!;
     } else if (world.lastFlapAgo < 90) {
-      return bird4;
+      return imageLibrary.bird4!;
     } else {
-      return bird1;
+      return imageLibrary.bird1!;
     }
   })();
   drawImage(
@@ -528,7 +540,7 @@ function step(timestamp: number) {
   const dt = timestamp - world.lastTimestamp;
 
   world.dx += dt / 2;
-  world.dx %= backgroundImage.width;
+  world.dx %= imageLibrary.background!.width;
 
   world.lastTimestamp = timestamp;
   world.lastFlapAgo += dt;
@@ -659,7 +671,9 @@ function step(timestamp: number) {
   }
 }
 
-loadAudioBuffers().then(() => {
+const assetLoadPromises = [loadAudioBuffers(), loadImages()];
+Promise.all(assetLoadPromises).then(() => {
+  world = new World();
   world.isLoading = false;
   loadingText.classList.add('hidden');
   startText.classList.remove('hidden');

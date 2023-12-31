@@ -62,19 +62,44 @@ var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var startText = document.getElementById('start-game');
 var BASE_URL = window.location.href.replace(/\/$/, '');
-var backgroundImage = new Image();
-backgroundImage.src = "".concat(BASE_URL, "/public/background.png");
-var bird1 = new Image();
-bird1.src = "".concat(BASE_URL, "/public/bird_1.png");
-var bird2 = new Image();
-bird2.src = "".concat(BASE_URL, "/public/bird_2.png");
-var bird3 = new Image();
-bird3.src = "".concat(BASE_URL, "/public/bird_3.png");
-var bird4 = new Image();
-bird4.src = "".concat(BASE_URL, "/public/bird_4.png");
-var pipeImag = new Image();
-pipeImag.src = "".concat(BASE_URL, "/public/pipe.png");
 var loadingText = document.getElementById('loading');
+var imageLibrary = {};
+function loadImages() {
+    return __awaiter(this, void 0, void 0, function () {
+        var images, _i, images_1, _a, key, url, image, objectUrl;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    images = [
+                        { key: 'bird1', url: "".concat(BASE_URL, "/public/bird_1.png") },
+                        { key: 'bird2', url: "".concat(BASE_URL, "/public/bird_2.png") },
+                        { key: 'bird3', url: "".concat(BASE_URL, "/public/bird_3.png") },
+                        { key: 'bird4', url: "".concat(BASE_URL, "/public/bird_4.png") },
+                        { key: 'pipe', url: "".concat(BASE_URL, "/public/pipe.png") },
+                        { key: 'background', url: "".concat(BASE_URL, "/public/background.png") },
+                    ];
+                    _i = 0, images_1 = images;
+                    _b.label = 1;
+                case 1:
+                    if (!(_i < images_1.length)) return [3 /*break*/, 4];
+                    _a = images_1[_i], key = _a.key, url = _a.url;
+                    image = new Image();
+                    return [4 /*yield*/, fetch(url)
+                            .then(function (res) { return res.blob(); })
+                            .then(function (blob) { return URL.createObjectURL(blob); })];
+                case 2:
+                    objectUrl = _b.sent();
+                    image.src = objectUrl;
+                    imageLibrary[key] = image;
+                    _b.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
 /******************************************************************************/
 /* Audio */
 var audioContext = new AudioContext();
@@ -162,18 +187,18 @@ var World = /** @class */ (function () {
     function World() {
         var _this = this;
         _World_instances.add(this);
-        _World_BG_SCALE.set(this, canvas.height / backgroundImage.height);
+        _World_BG_SCALE.set(this, canvas.height / imageLibrary.background.height);
         _World_BIRD_HEIGHT.set(this, canvas.height / 10);
-        _World_BIRD_SCALE.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / bird1.height);
-        _World_BIRD_WIDTH.set(this, bird1.width * __classPrivateFieldGet(this, _World_BIRD_SCALE, "f"));
+        _World_BIRD_SCALE.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / imageLibrary.bird1.height);
+        _World_BIRD_WIDTH.set(this, imageLibrary.bird1.width * __classPrivateFieldGet(this, _World_BIRD_SCALE, "f"));
         _World_BIRD_BIG_HIT_BOX_RADIUS.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.4);
         _World_BIRD_SMALL_HIT_BOX_RADIUS.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.3);
         _World_BIRD_SMALL_HIT_BOX_1_OFFSET.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.25);
         _World_BIRD_SMALL_HIT_BOX_2_OFFSET.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.2);
         _World_BIRD_X.set(this, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 1.5);
         _World_PIPE_SCALE.set(this, 4);
-        _World_PIPE_HEIGHT.set(this, pipeImag.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
-        _World_PIPE_WIDTH.set(this, pipeImag.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
+        _World_PIPE_HEIGHT.set(this, imageLibrary.pipe.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
+        _World_PIPE_WIDTH.set(this, imageLibrary.pipe.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
         _World_FONT_SIZE.set(this, canvas.height * 0.05);
         this.dx = 0;
         this.birdY = canvas.height / 2 - __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / 2;
@@ -329,21 +354,21 @@ var World = /** @class */ (function () {
     return World;
 }());
 _World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD_SCALE = new WeakMap(), _World_BIRD_WIDTH = new WeakMap(), _World_BIRD_BIG_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_1_OFFSET = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_2_OFFSET = new WeakMap(), _World_BIRD_X = new WeakMap(), _World_PIPE_SCALE = new WeakMap(), _World_PIPE_HEIGHT = new WeakMap(), _World_PIPE_WIDTH = new WeakMap(), _World_FONT_SIZE = new WeakMap(), _World_instances = new WeakSet(), _World_init = function _World_init() {
-    __classPrivateFieldSet(this, _World_BG_SCALE, canvas.height / backgroundImage.height, "f");
+    __classPrivateFieldSet(this, _World_BG_SCALE, canvas.height / imageLibrary.background.height, "f");
     __classPrivateFieldSet(this, _World_BIRD_HEIGHT, canvas.height / 10, "f");
-    __classPrivateFieldSet(this, _World_BIRD_SCALE, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / bird1.height, "f");
-    __classPrivateFieldSet(this, _World_BIRD_WIDTH, bird1.width * __classPrivateFieldGet(this, _World_BIRD_SCALE, "f"), "f");
+    __classPrivateFieldSet(this, _World_BIRD_SCALE, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / imageLibrary.bird1.height, "f");
+    __classPrivateFieldSet(this, _World_BIRD_WIDTH, imageLibrary.bird1.width * __classPrivateFieldGet(this, _World_BIRD_SCALE, "f"), "f");
     __classPrivateFieldSet(this, _World_BIRD_BIG_HIT_BOX_RADIUS, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.4, "f");
     __classPrivateFieldSet(this, _World_BIRD_SMALL_HIT_BOX_RADIUS, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.3, "f");
     __classPrivateFieldSet(this, _World_BIRD_SMALL_HIT_BOX_1_OFFSET, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.25, "f");
     __classPrivateFieldSet(this, _World_BIRD_SMALL_HIT_BOX_2_OFFSET, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 0.2, "f");
     __classPrivateFieldSet(this, _World_BIRD_X, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") * 1.5, "f");
     __classPrivateFieldSet(this, _World_PIPE_SCALE, 4, "f");
-    __classPrivateFieldSet(this, _World_PIPE_HEIGHT, pipeImag.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
-    __classPrivateFieldSet(this, _World_PIPE_WIDTH, pipeImag.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
+    __classPrivateFieldSet(this, _World_PIPE_HEIGHT, imageLibrary.pipe.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
+    __classPrivateFieldSet(this, _World_PIPE_WIDTH, imageLibrary.pipe.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
     __classPrivateFieldSet(this, _World_FONT_SIZE, canvas.height * 0.05, "f");
 };
-var world = new World();
+var world;
 /******************************************************************************/
 /* Positions */
 function getPipeCoordinatesInCanvasSpace(pipe) {
@@ -418,8 +443,8 @@ function drawImage(image, x, y, scale, rotation) {
 }
 function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(backgroundImage, world.dx, 0, backgroundImage.width, backgroundImage.height, 0, 0, backgroundImage.width * world.bgScale, backgroundImage.height * world.bgScale);
-    context.drawImage(backgroundImage, world.dx - backgroundImage.width + 2, 0, backgroundImage.width, backgroundImage.height, 0, 0, backgroundImage.width * world.bgScale, backgroundImage.height * world.bgScale);
+    context.drawImage(imageLibrary.background, world.dx, 0, imageLibrary.background.width, imageLibrary.background.height, 0, 0, imageLibrary.background.width * world.bgScale, imageLibrary.background.height * world.bgScale);
+    context.drawImage(imageLibrary.background, world.dx - imageLibrary.background.width + 2, 0, imageLibrary.background.width, imageLibrary.background.height, 0, 0, imageLibrary.background.width * world.bgScale, imageLibrary.background.height * world.bgScale);
     // Draw bird shadow
     var shadowScale = world.birdY / (canvas.height - 98);
     context.beginPath();
@@ -430,7 +455,7 @@ function draw() {
     for (var _i = 0, _a = world.pipes; _i < _a.length; _i++) {
         var pipe = _a[_i];
         var _b = getPipeCoordinatesInCanvasSpace(pipe), pipeX = _b.x, pipeY = _b.y;
-        drawImage(pipeImag, pipeX + world.pipeWidth / 2, pipeY + world.pipeHeight / 2, world.pipeScale, pipe.ceiling ? Math.PI : 0);
+        drawImage(imageLibrary.pipe, pipeX + world.pipeWidth / 2, pipeY + world.pipeHeight / 2, world.pipeScale, pipe.ceiling ? Math.PI : 0);
         // Draw pipe hitbox
         // context.beginPath();
         // context.rect(pipeX, pipeY, world.pipeWidth, world.pipeHeight);
@@ -441,16 +466,16 @@ function draw() {
     var birdAngle = world.birdAngle;
     var bird = (function () {
         if (world.lastFlapAgo < 30) {
-            return bird2;
+            return imageLibrary.bird2;
         }
         else if (world.lastFlapAgo < 60) {
-            return bird3;
+            return imageLibrary.bird3;
         }
         else if (world.lastFlapAgo < 90) {
-            return bird4;
+            return imageLibrary.bird4;
         }
         else {
-            return bird1;
+            return imageLibrary.bird1;
         }
     })();
     drawImage(bird, world.birdX * 0.98, world.birdY * 0.98, world.birdScale, birdAngle);
@@ -531,7 +556,7 @@ function die() {
 function step(timestamp) {
     var dt = timestamp - world.lastTimestamp;
     world.dx += dt / 2;
-    world.dx %= backgroundImage.width;
+    world.dx %= imageLibrary.background.width;
     world.lastTimestamp = timestamp;
     world.lastFlapAgo += dt;
     // Thrust upwards
@@ -612,7 +637,9 @@ function step(timestamp) {
         requestAnimationFrame(step);
     }
 }
-loadAudioBuffers().then(function () {
+var assetLoadPromises = [loadAudioBuffers(), loadImages()];
+Promise.all(assetLoadPromises).then(function () {
+    world = new World();
     world.isLoading = false;
     loadingText.classList.add('hidden');
     startText.classList.remove('hidden');
