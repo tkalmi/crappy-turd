@@ -477,17 +477,20 @@ function draw() {
   context.lineWidth = 2;
   drawText(
     `Pipes avoided: ${world.passedPipePositions.size}`,
-    canvas.width - world.fontSize * 11,
+    canvas.width - world.fontSize * 13,
     world.fontSize
   );
   drawText(
-    `Score: ${Math.floor((world.lastTimestamp - world.gameStarted) / 10)}`,
-    canvas.width - world.fontSize * 11,
+    `Time survived: ${(
+      (world.lastTimestamp - world.gameStarted) /
+      1_000
+    ).toFixed(2)}s`,
+    canvas.width - world.fontSize * 13,
     world.fontSize * 2.5
   );
   drawText(
     `Flap counter: ${world.flapsUsed}`,
-    canvas.width - world.fontSize * 11,
+    canvas.width - world.fontSize * 13,
     world.fontSize * 4
   );
 

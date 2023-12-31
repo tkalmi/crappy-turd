@@ -507,9 +507,10 @@ function draw() {
     // context.fill();
     // Draw stats
     context.lineWidth = 2;
-    drawText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - world.fontSize * 11, world.fontSize);
-    drawText("Score: ".concat(Math.floor((world.lastTimestamp - world.gameStarted) / 10)), canvas.width - world.fontSize * 11, world.fontSize * 2.5);
-    drawText("Flap counter: ".concat(world.flapsUsed), canvas.width - world.fontSize * 11, world.fontSize * 4);
+    drawText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - world.fontSize * 13, world.fontSize);
+    drawText("Time survived: ".concat(((world.lastTimestamp - world.gameStarted) /
+        1000).toFixed(2), "s"), canvas.width - world.fontSize * 13, world.fontSize * 2.5);
+    drawText("Flap counter: ".concat(world.flapsUsed), canvas.width - world.fontSize * 13, world.fontSize * 4);
     // Draw game over
     if (!world.isLooping) {
         drawText('Game Over', canvas.width / 2 - world.fontSize * 5.5, canvas.height / 2, world.fontSize * 2);
