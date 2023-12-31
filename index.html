@@ -24,18 +24,21 @@
       .hidden {
         display: none;
       }
-      #loading {
+      #loading,
+      #start-game {
         position: absolute;
         top: 30%;
         left: 50%;
         transform: translateX(-50%);
         font-size: 10vh;
+        text-align: center;
       }
     </style>
   </head>
 
   <body>
     <p id="loading">Loading...</p>
+    <p id="start-game" class="hidden">Press spacebar to start the game</p>
     <canvas
       id="canvas"
       width="1600px"

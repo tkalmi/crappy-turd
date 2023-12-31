@@ -59,6 +59,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _World_BIRD_WIDTH, _World_BIRD_BIG_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_1_OFFSET, _World_BIRD_SMALL_HIT_BOX_2_OFFSET, _World_BIRD_X, _World_PIPE_SCALE, _World_PIPE_HEIGHT, _World_PIPE_WIDTH, _World_FONT_SIZE, _World_init;
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
+var startText = document.getElementById('start-game');
 var backgroundImage = new Image();
 backgroundImage.src = 'public/background.png';
 var bird1 = new Image();
@@ -96,12 +97,13 @@ var World = /** @class */ (function () {
         this.nextPipeIn = 0;
         this.keysDown = {};
         this.spaceNeedsHandling = false;
-        this.isLooping = true;
+        this.isLooping = false;
         this.lastTimestamp = 0;
         this.gameStarted = this.lastTimestamp;
         this.pipes = [];
         this.passedPipePositions = new Set();
         this.flapsUsed = 0;
+        this.isLoading = true;
         __classPrivateFieldGet(this, _World_instances, "m", _World_init).call(this);
         addEventListener('resize', function () {
             __classPrivateFieldGet(_this, _World_instances, "m", _World_init).call(_this);
@@ -110,8 +112,9 @@ var World = /** @class */ (function () {
             _this.keysDown[event.code] = true;
             if (event.code === 'Space') {
                 _this.spaceNeedsHandling = true;
-                if (!_this.isLooping) {
+                if (!_this.isLooping && !_this.isLoading) {
                     canvas.classList.remove('game-over');
+                    startText.classList.add('hidden');
                     _this.reset();
                     requestAnimationFrame(step);
                 }
@@ -336,9 +339,9 @@ function loadAudioBuffers() {
 }
 var loadingText = document.getElementById('loading');
 loadAudioBuffers().then(function () {
+    world.isLoading = false;
     loadingText.classList.add('hidden');
-    world.reset();
-    requestAnimationFrame(step);
+    startText.classList.remove('hidden');
 });
 function die() {
     world.isLooping = false;

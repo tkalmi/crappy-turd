@@ -1,5 +1,6 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+const startText = document.getElementById('start-game') as HTMLParagraphElement;
 const backgroundImage = new Image();
 backgroundImage.src = 'public/background.png';
 const bird1 = new Image();
@@ -36,12 +37,13 @@ class World {
   nextPipeIn = 0;
   keysDown: Record<string, boolean> = {};
   spaceNeedsHandling = false;
-  isLooping = true;
+  isLooping = false;
   lastTimestamp = 0;
   gameStarted = this.lastTimestamp;
   pipes: Pipe[] = [];
   passedPipePositions = new Set<number>();
   flapsUsed = 0;
+  isLoading = true;
 
   constructor() {
     this.#init();
@@ -53,8 +55,9 @@ class World {
       this.keysDown[event.code] = true;
       if (event.code === 'Space') {
         this.spaceNeedsHandling = true;
-        if (!this.isLooping) {
+        if (!this.isLooping && !this.isLoading) {
           canvas.classList.remove('game-over');
+          startText.classList.add('hidden');
           this.reset();
           requestAnimationFrame(step);
         }
@@ -215,9 +218,9 @@ async function loadAudioBuffers() {
 
 const loadingText = document.getElementById('loading') as HTMLParagraphElement;
 loadAudioBuffers().then(() => {
+  world.isLoading = false;
   loadingText.classList.add('hidden');
-  world.reset();
-  requestAnimationFrame(step);
+  startText.classList.remove('hidden');
 });
 
 function die() {
