@@ -56,6 +56,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
+/* Canvas and image assets */
 var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _World_BIRD_WIDTH, _World_BIRD_BIG_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_1_OFFSET, _World_BIRD_SMALL_HIT_BOX_2_OFFSET, _World_BIRD_X, _World_PIPE_SCALE, _World_PIPE_HEIGHT, _World_PIPE_WIDTH, _World_FONT_SIZE, _World_init;
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -72,6 +73,88 @@ var bird4 = new Image();
 bird4.src = 'public/bird_4.png';
 var pipeImag = new Image();
 pipeImag.src = 'public/pipe.png';
+var loadingText = document.getElementById('loading');
+/******************************************************************************/
+/* Audio */
+var audioContext = new AudioContext();
+var audioLibrary = {};
+var gainNodes = {
+    mainTheme: audioContext.createGain(),
+    flap: audioContext.createGain(),
+    pipePassed: audioContext.createGain(),
+    death: audioContext.createGain(),
+};
+gainNodes.mainTheme.gain.value = 0.6;
+gainNodes.flap.gain.value = 1;
+gainNodes.pipePassed.gain.value = 0.3;
+gainNodes.death.gain.value = 0.8;
+for (var _i = 0, _a = Object.keys(gainNodes); _i < _a.length; _i++) {
+    var key = _a[_i];
+    gainNodes[key].connect(audioContext.destination);
+}
+function playAudio(key, loop) {
+    if (loop === void 0) { loop = false; }
+    var oldBuffer = audioLibrary[key];
+    var track = audioContext.createBufferSource();
+    track.buffer = oldBuffer.buffer;
+    audioLibrary[key] = track;
+    var gainNode = gainNodes[key];
+    track.connect(gainNode);
+    if (loop) {
+        track.loop = true;
+    }
+    track.start();
+    audioContext.resume();
+}
+function stopAudio(key) {
+    var track = audioLibrary[key];
+    track.stop(0);
+}
+function loadAudioBuffers() {
+    return __awaiter(this, void 0, void 0, function () {
+        var mainThemeAudio, flapAudio, pipePassedAudio, deathAudio, audioUrls, _i, audioUrls_1, _a, key, url, track, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    mainThemeAudio = {
+                        key: 'mainTheme',
+                        url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+                    };
+                    flapAudio = {
+                        key: 'flap',
+                        url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+                    };
+                    pipePassedAudio = {
+                        key: 'pipePassed',
+                        url: '/public/mixkit-unlock-game-notification-253.wav',
+                    };
+                    deathAudio = {
+                        key: 'death',
+                        url: '/public/mixkit-losing-drums-2023.wav',
+                    };
+                    audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
+                    _i = 0, audioUrls_1 = audioUrls;
+                    _c.label = 1;
+                case 1:
+                    if (!(_i < audioUrls_1.length)) return [3 /*break*/, 4];
+                    _a = audioUrls_1[_i], key = _a.key, url = _a.url;
+                    track = audioContext.createBufferSource();
+                    _b = track;
+                    return [4 /*yield*/, fetch(url)
+                            .then(function (res) { return res.arrayBuffer(); })
+                            .then(function (arrayBuffer) { return audioContext.decodeAudioData(arrayBuffer); })];
+                case 2:
+                    _b.buffer = _c.sent();
+                    audioLibrary[key] = track;
+                    _c.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
 var World = /** @class */ (function () {
     function World() {
         var _this = this;
@@ -258,97 +341,8 @@ _World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD
     __classPrivateFieldSet(this, _World_FONT_SIZE, canvas.height * 0.05, "f");
 };
 var world = new World();
-var audioContext = new AudioContext();
-var audioLibrary = {};
-var gainNodes = {
-    mainTheme: audioContext.createGain(),
-    flap: audioContext.createGain(),
-    pipePassed: audioContext.createGain(),
-    death: audioContext.createGain(),
-};
-gainNodes.mainTheme.gain.value = 0.6;
-gainNodes.flap.gain.value = 1;
-gainNodes.pipePassed.gain.value = 0.3;
-gainNodes.death.gain.value = 0.8;
-for (var _i = 0, _a = Object.keys(gainNodes); _i < _a.length; _i++) {
-    var key = _a[_i];
-    gainNodes[key].connect(audioContext.destination);
-}
-function playAudio(key, loop) {
-    if (loop === void 0) { loop = false; }
-    var oldBuffer = audioLibrary[key];
-    var track = audioContext.createBufferSource();
-    track.buffer = oldBuffer.buffer;
-    audioLibrary[key] = track;
-    var gainNode = gainNodes[key];
-    track.connect(gainNode);
-    if (loop) {
-        track.loop = true;
-    }
-    track.start();
-    audioContext.resume();
-}
-function stopAudio(key) {
-    var track = audioLibrary[key];
-    track.stop(0);
-}
-function loadAudioBuffers() {
-    return __awaiter(this, void 0, void 0, function () {
-        var mainThemeAudio, flapAudio, pipePassedAudio, deathAudio, audioUrls, _i, audioUrls_1, _a, key, url, track, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
-                case 0:
-                    mainThemeAudio = {
-                        key: 'mainTheme',
-                        url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
-                    };
-                    flapAudio = {
-                        key: 'flap',
-                        url: '/public/mixkit-quick-jump-arcade-game-239.wav',
-                    };
-                    pipePassedAudio = {
-                        key: 'pipePassed',
-                        url: '/public/mixkit-unlock-game-notification-253.wav',
-                    };
-                    deathAudio = {
-                        key: 'death',
-                        url: '/public/mixkit-losing-drums-2023.wav',
-                    };
-                    audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
-                    _i = 0, audioUrls_1 = audioUrls;
-                    _c.label = 1;
-                case 1:
-                    if (!(_i < audioUrls_1.length)) return [3 /*break*/, 4];
-                    _a = audioUrls_1[_i], key = _a.key, url = _a.url;
-                    track = audioContext.createBufferSource();
-                    _b = track;
-                    return [4 /*yield*/, fetch(url)
-                            .then(function (res) { return res.arrayBuffer(); })
-                            .then(function (arrayBuffer) { return audioContext.decodeAudioData(arrayBuffer); })];
-                case 2:
-                    _b.buffer = _c.sent();
-                    audioLibrary[key] = track;
-                    _c.label = 3;
-                case 3:
-                    _i++;
-                    return [3 /*break*/, 1];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-var loadingText = document.getElementById('loading');
-loadAudioBuffers().then(function () {
-    world.isLoading = false;
-    loadingText.classList.add('hidden');
-    startText.classList.remove('hidden');
-});
-function die() {
-    world.isLooping = false;
-    canvas.classList.add('game-over');
-    stopAudio('mainTheme');
-    playAudio('death');
-}
+/******************************************************************************/
+/* Positions */
 function getPipeCoordinatesInCanvasSpace(pipe) {
     var x = canvas.width - (world.lastTimestamp - pipe.t);
     var y = pipe.ceiling
@@ -365,6 +359,45 @@ function getBirdCoordinatesInCanvasSpace() {
         y: world.birdY,
     };
 }
+function getHitBoxCoordinatesInCanvasSpace(rotateRad, xOffset) {
+    if (rotateRad === void 0) { rotateRad = 0; }
+    if (xOffset === void 0) { xOffset = 0; }
+    var origin = {
+        x: xOffset,
+        y: 0,
+    };
+    var xNew = origin.x * Math.cos(rotateRad);
+    var yNew = origin.x * Math.sin(rotateRad);
+    origin.x = xNew + world.birdX;
+    origin.y = yNew + world.birdY;
+    return origin;
+}
+function detectCollision(rect, circle) {
+    var testX = circle.x;
+    var testY = circle.y;
+    // Bird is to the left of the pipe
+    if (circle.x < rect.x) {
+        testX = rect.x;
+    }
+    // Bird is to the right of the pipe
+    else if (circle.x > rect.x + rect.w) {
+        testX = rect.x + rect.w;
+    }
+    // Bird is above the pipe
+    if (circle.y < rect.y) {
+        testY = rect.y;
+    }
+    // Bird is below the pipe
+    else if (circle.y > rect.y + rect.h) {
+        testY = rect.y + rect.h;
+    }
+    var distX = circle.x - testX;
+    var distY = circle.y - testY;
+    var distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+    return distance <= circle.r;
+}
+/******************************************************************************/
+/* Draw */
 function drawText(text, x, y, fontSize) {
     if (fontSize === void 0) { fontSize = world.fontSize; }
     context.font = "".concat(fontSize, "px monospace");
@@ -483,42 +516,13 @@ function draw() {
         drawText('Press spacebar to restart', canvas.width / 2 - world.fontSize * 7.5, canvas.height / 2 + world.fontSize * 1.5);
     }
 }
-function getHitBoxCoordinatesInCanvasSpace(rotateRad, xOffset) {
-    if (rotateRad === void 0) { rotateRad = 0; }
-    if (xOffset === void 0) { xOffset = 0; }
-    var origin = {
-        x: xOffset,
-        y: 0,
-    };
-    var xNew = origin.x * Math.cos(rotateRad);
-    var yNew = origin.x * Math.sin(rotateRad);
-    origin.x = xNew + world.birdX;
-    origin.y = yNew + world.birdY;
-    return origin;
-}
-function detectCollision(rect, circle) {
-    var testX = circle.x;
-    var testY = circle.y;
-    // Bird is to the left of the pipe
-    if (circle.x < rect.x) {
-        testX = rect.x;
-    }
-    // Bird is to the right of the pipe
-    else if (circle.x > rect.x + rect.w) {
-        testX = rect.x + rect.w;
-    }
-    // Bird is above the pipe
-    if (circle.y < rect.y) {
-        testY = rect.y;
-    }
-    // Bird is below the pipe
-    else if (circle.y > rect.y + rect.h) {
-        testY = rect.y + rect.h;
-    }
-    var distX = circle.x - testX;
-    var distY = circle.y - testY;
-    var distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
-    return distance <= circle.r;
+/******************************************************************************/
+/* Game logic */
+function die() {
+    world.isLooping = false;
+    canvas.classList.add('game-over');
+    stopAudio('mainTheme');
+    playAudio('death');
 }
 function step(timestamp) {
     var dt = timestamp - world.lastTimestamp;
@@ -604,3 +608,9 @@ function step(timestamp) {
         requestAnimationFrame(step);
     }
 }
+loadAudioBuffers().then(function () {
+    world.isLoading = false;
+    loadingText.classList.add('hidden');
+    startText.classList.remove('hidden');
+});
+/******************************************************************************/

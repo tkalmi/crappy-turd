@@ -1,3 +1,5 @@
+/* Canvas and image assets */
+
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 const startText = document.getElementById('start-game') as HTMLParagraphElement;
@@ -13,6 +15,84 @@ const bird4 = new Image();
 bird4.src = 'public/bird_4.png';
 const pipeImag = new Image();
 pipeImag.src = 'public/pipe.png';
+const loadingText = document.getElementById('loading') as HTMLParagraphElement;
+
+/******************************************************************************/
+
+/* Audio */
+
+const audioContext = new AudioContext();
+type AudioKey = 'mainTheme' | 'flap' | 'pipePassed' | 'death';
+const audioLibrary: Partial<Record<AudioKey, AudioBufferSourceNode>> = {};
+const gainNodes: Record<AudioKey, GainNode> = {
+  mainTheme: audioContext.createGain(),
+  flap: audioContext.createGain(),
+  pipePassed: audioContext.createGain(),
+  death: audioContext.createGain(),
+};
+gainNodes.mainTheme.gain.value = 0.6;
+gainNodes.flap.gain.value = 1;
+gainNodes.pipePassed.gain.value = 0.3;
+gainNodes.death.gain.value = 0.8;
+for (const key of Object.keys(gainNodes) as AudioKey[]) {
+  gainNodes[key].connect(audioContext.destination);
+}
+
+function playAudio(key: AudioKey, loop: boolean = false) {
+  const oldBuffer = audioLibrary[key]!;
+  const track = audioContext.createBufferSource();
+  track.buffer = oldBuffer.buffer;
+  audioLibrary[key] = track;
+  const gainNode = gainNodes[key];
+  track.connect(gainNode);
+  if (loop) {
+    track.loop = true;
+  }
+  track.start();
+  audioContext.resume();
+}
+
+function stopAudio(key: AudioKey) {
+  const track = audioLibrary[key]!;
+  track.stop(0);
+}
+
+async function loadAudioBuffers() {
+  const mainThemeAudio = {
+    key: 'mainTheme' as AudioKey,
+    url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+  };
+  const flapAudio = {
+    key: 'flap' as AudioKey,
+    url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+  };
+  const pipePassedAudio = {
+    key: 'pipePassed' as AudioKey,
+    url: '/public/mixkit-unlock-game-notification-253.wav',
+  };
+  const deathAudio = {
+    key: 'death' as AudioKey,
+    url: '/public/mixkit-losing-drums-2023.wav',
+  };
+  const audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
+  for (const { key, url } of audioUrls) {
+    const track = audioContext.createBufferSource();
+    track.buffer = await fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
+    audioLibrary[key] = track;
+  }
+}
+
+/******************************************************************************/
+
+/* World (constants and state) */
+
+type Pipe = {
+  t: number;
+  ceiling: boolean;
+  height: number;
+};
 
 class World {
   #BG_SCALE = canvas.height / backgroundImage.height;
@@ -150,91 +230,11 @@ class World {
     return birdAngleDeg * (Math.PI / 180);
   }
 }
-
 const world = new World();
 
-const audioContext = new AudioContext();
-type AudioKey = 'mainTheme' | 'flap' | 'pipePassed' | 'death';
-const audioLibrary: Partial<Record<AudioKey, AudioBufferSourceNode>> = {};
-const gainNodes: Record<AudioKey, GainNode> = {
-  mainTheme: audioContext.createGain(),
-  flap: audioContext.createGain(),
-  pipePassed: audioContext.createGain(),
-  death: audioContext.createGain(),
-};
-gainNodes.mainTheme.gain.value = 0.6;
-gainNodes.flap.gain.value = 1;
-gainNodes.pipePassed.gain.value = 0.3;
-gainNodes.death.gain.value = 0.8;
-for (const key of Object.keys(gainNodes) as AudioKey[]) {
-  gainNodes[key].connect(audioContext.destination);
-}
+/******************************************************************************/
 
-function playAudio(key: AudioKey, loop: boolean = false) {
-  const oldBuffer = audioLibrary[key]!;
-  const track = audioContext.createBufferSource();
-  track.buffer = oldBuffer.buffer;
-  audioLibrary[key] = track;
-  const gainNode = gainNodes[key];
-  track.connect(gainNode);
-  if (loop) {
-    track.loop = true;
-  }
-  track.start();
-  audioContext.resume();
-}
-
-function stopAudio(key: AudioKey) {
-  const track = audioLibrary[key]!;
-  track.stop(0);
-}
-
-async function loadAudioBuffers() {
-  const mainThemeAudio = {
-    key: 'mainTheme' as AudioKey,
-    url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
-  };
-  const flapAudio = {
-    key: 'flap' as AudioKey,
-    url: '/public/mixkit-quick-jump-arcade-game-239.wav',
-  };
-  const pipePassedAudio = {
-    key: 'pipePassed' as AudioKey,
-    url: '/public/mixkit-unlock-game-notification-253.wav',
-  };
-  const deathAudio = {
-    key: 'death' as AudioKey,
-    url: '/public/mixkit-losing-drums-2023.wav',
-  };
-  const audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
-  for (const { key, url } of audioUrls) {
-    const track = audioContext.createBufferSource();
-    track.buffer = await fetch(url)
-      .then((res) => res.arrayBuffer())
-      .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
-    audioLibrary[key] = track;
-  }
-}
-
-const loadingText = document.getElementById('loading') as HTMLParagraphElement;
-loadAudioBuffers().then(() => {
-  world.isLoading = false;
-  loadingText.classList.add('hidden');
-  startText.classList.remove('hidden');
-});
-
-function die() {
-  world.isLooping = false;
-  canvas.classList.add('game-over');
-  stopAudio('mainTheme');
-  playAudio('death');
-}
-
-type Pipe = {
-  t: number;
-  ceiling: boolean;
-  height: number;
-};
+/* Positions */
 
 function getPipeCoordinatesInCanvasSpace(pipe: Pipe) {
   const x = canvas.width - (world.lastTimestamp - pipe.t);
@@ -253,6 +253,60 @@ function getBirdCoordinatesInCanvasSpace() {
     y: world.birdY,
   };
 }
+
+function getHitBoxCoordinatesInCanvasSpace(
+  rotateRad: number = 0,
+  xOffset: number = 0
+) {
+  const origin = {
+    x: xOffset,
+    y: 0,
+  };
+  let xNew = origin.x * Math.cos(rotateRad);
+  let yNew = origin.x * Math.sin(rotateRad);
+  origin.x = xNew + world.birdX;
+  origin.y = yNew + world.birdY;
+
+  return origin;
+}
+
+function detectCollision(
+  rect: { x: number; y: number; w: number; h: number },
+  circle: { x: number; y: number; r: number }
+) {
+  let testX = circle.x;
+  let testY = circle.y;
+
+  // Bird is to the left of the pipe
+  if (circle.x < rect.x) {
+    testX = rect.x;
+  }
+
+  // Bird is to the right of the pipe
+  else if (circle.x > rect.x + rect.w) {
+    testX = rect.x + rect.w;
+  }
+
+  // Bird is above the pipe
+  if (circle.y < rect.y) {
+    testY = rect.y;
+  }
+
+  // Bird is below the pipe
+  else if (circle.y > rect.y + rect.h) {
+    testY = rect.y + rect.h;
+  }
+
+  const distX = circle.x - testX;
+  const distY = circle.y - testY;
+  const distance = Math.sqrt(distX ** 2 + distY ** 2);
+
+  return distance <= circle.r;
+}
+
+/******************************************************************************/
+
+/* Draw */
 
 function drawText(
   text: string,
@@ -453,54 +507,15 @@ function draw() {
   }
 }
 
-function getHitBoxCoordinatesInCanvasSpace(
-  rotateRad: number = 0,
-  xOffset: number = 0
-) {
-  const origin = {
-    x: xOffset,
-    y: 0,
-  };
-  let xNew = origin.x * Math.cos(rotateRad);
-  let yNew = origin.x * Math.sin(rotateRad);
-  origin.x = xNew + world.birdX;
-  origin.y = yNew + world.birdY;
+/******************************************************************************/
 
-  return origin;
-}
+/* Game logic */
 
-function detectCollision(
-  rect: { x: number; y: number; w: number; h: number },
-  circle: { x: number; y: number; r: number }
-) {
-  let testX = circle.x;
-  let testY = circle.y;
-
-  // Bird is to the left of the pipe
-  if (circle.x < rect.x) {
-    testX = rect.x;
-  }
-
-  // Bird is to the right of the pipe
-  else if (circle.x > rect.x + rect.w) {
-    testX = rect.x + rect.w;
-  }
-
-  // Bird is above the pipe
-  if (circle.y < rect.y) {
-    testY = rect.y;
-  }
-
-  // Bird is below the pipe
-  else if (circle.y > rect.y + rect.h) {
-    testY = rect.y + rect.h;
-  }
-
-  const distX = circle.x - testX;
-  const distY = circle.y - testY;
-  const distance = Math.sqrt(distX ** 2 + distY ** 2);
-
-  return distance <= circle.r;
+function die() {
+  world.isLooping = false;
+  canvas.classList.add('game-over');
+  stopAudio('mainTheme');
+  playAudio('death');
 }
 
 function step(timestamp: number) {
@@ -637,3 +652,11 @@ function step(timestamp: number) {
     requestAnimationFrame(step);
   }
 }
+
+loadAudioBuffers().then(() => {
+  world.isLoading = false;
+  loadingText.classList.add('hidden');
+  startText.classList.remove('hidden');
+});
+
+/******************************************************************************/
