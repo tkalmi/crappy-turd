@@ -20,7 +20,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _World_BIRD_WIDTH, _World_BIRD_BIG_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_1_OFFSET, _World_BIRD_SMALL_HIT_BOX_2_OFFSET, _World_BIRD_X, _World_PIPE_SCALE, _World_PIPE_HEIGHT, _World_PIPE_WIDTH, _World_init;
+var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _World_BIRD_WIDTH, _World_BIRD_BIG_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_RADIUS, _World_BIRD_SMALL_HIT_BOX_1_OFFSET, _World_BIRD_SMALL_HIT_BOX_2_OFFSET, _World_BIRD_X, _World_PIPE_SCALE, _World_PIPE_HEIGHT, _World_PIPE_WIDTH, _World_FONT_SIZE, _World_init;
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var backgroundImage = new Image();
@@ -51,6 +51,7 @@ var World = /** @class */ (function () {
         _World_PIPE_SCALE.set(this, 4);
         _World_PIPE_HEIGHT.set(this, pipeImag.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
         _World_PIPE_WIDTH.set(this, pipeImag.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"));
+        _World_FONT_SIZE.set(this, canvas.height * 0.05);
         this.dx = 0;
         this.birdY = canvas.height / 2 - __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / 2;
         this.birdSpeedY = 0;
@@ -61,6 +62,7 @@ var World = /** @class */ (function () {
         this.spaceNeedsHandling = false;
         this.isLooping = true;
         this.lastTimestamp = 0;
+        this.gameStarted = this.lastTimestamp;
         this.pipes = [];
         this.passedPipePositions = new Set();
         this.flapsUsed = 0;
@@ -91,6 +93,10 @@ var World = /** @class */ (function () {
         this.spaceNeedsHandling = false;
         this.isLooping = true;
         this.lastTimestamp = performance.now();
+        this.gameStarted = this.lastTimestamp;
+        this.lastPipeCreated = this.lastTimestamp;
+        this.nextPipeIn = 0;
+        this.pipes = [];
         this.passedPipePositions.clear();
         this.flapsUsed = 0;
     };
@@ -178,6 +184,13 @@ var World = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(World.prototype, "fontSize", {
+        get: function () {
+            return __classPrivateFieldGet(this, _World_FONT_SIZE, "f");
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(World.prototype, "birdAngle", {
         get: function () {
             var birdAngleDeg = (Math.max(-600, Math.min(600, -world.birdSpeedY)) / 600) * 50;
@@ -188,7 +201,7 @@ var World = /** @class */ (function () {
     });
     return World;
 }());
-_World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD_SCALE = new WeakMap(), _World_BIRD_WIDTH = new WeakMap(), _World_BIRD_BIG_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_1_OFFSET = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_2_OFFSET = new WeakMap(), _World_BIRD_X = new WeakMap(), _World_PIPE_SCALE = new WeakMap(), _World_PIPE_HEIGHT = new WeakMap(), _World_PIPE_WIDTH = new WeakMap(), _World_instances = new WeakSet(), _World_init = function _World_init() {
+_World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD_SCALE = new WeakMap(), _World_BIRD_WIDTH = new WeakMap(), _World_BIRD_BIG_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_RADIUS = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_1_OFFSET = new WeakMap(), _World_BIRD_SMALL_HIT_BOX_2_OFFSET = new WeakMap(), _World_BIRD_X = new WeakMap(), _World_PIPE_SCALE = new WeakMap(), _World_PIPE_HEIGHT = new WeakMap(), _World_PIPE_WIDTH = new WeakMap(), _World_FONT_SIZE = new WeakMap(), _World_instances = new WeakSet(), _World_init = function _World_init() {
     __classPrivateFieldSet(this, _World_BG_SCALE, canvas.height / backgroundImage.height, "f");
     __classPrivateFieldSet(this, _World_BIRD_HEIGHT, canvas.height / 10, "f");
     __classPrivateFieldSet(this, _World_BIRD_SCALE, __classPrivateFieldGet(this, _World_BIRD_HEIGHT, "f") / bird1.height, "f");
@@ -201,6 +214,7 @@ _World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD
     __classPrivateFieldSet(this, _World_PIPE_SCALE, 4, "f");
     __classPrivateFieldSet(this, _World_PIPE_HEIGHT, pipeImag.height * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
     __classPrivateFieldSet(this, _World_PIPE_WIDTH, pipeImag.width * __classPrivateFieldGet(this, _World_PIPE_SCALE, "f"), "f");
+    __classPrivateFieldSet(this, _World_FONT_SIZE, canvas.height * 0.05, "f");
 };
 var world = new World();
 function getPipeCoordinatesInCanvasSpace(pipe) {
@@ -218,6 +232,15 @@ function getBirdCoordinatesInCanvasSpace() {
         x: world.birdX,
         y: world.birdY,
     };
+}
+function drawText(text, x, y, fontSize) {
+    if (fontSize === void 0) { fontSize = world.fontSize; }
+    context.font = "".concat(fontSize, "px monospace");
+    context.fillStyle = 'white';
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    context.fillText(text, x, y);
+    context.strokeText(text, x, y);
 }
 function drawImage(image, x, y, scale, rotation) {
     context.setTransform(scale, 0, 0, scale, x, y);
@@ -318,16 +341,15 @@ function draw() {
     // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
     // context.fill();
     // Draw stats
-    var fontSize = canvas.height * 0.05;
-    context.font = "".concat(fontSize, "px monospace");
-    context.strokeStyle = 'black';
-    context.fillStyle = 'white';
-    context.fillText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - fontSize * 11, fontSize);
-    context.strokeText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - fontSize * 11, fontSize);
-    context.fillText("Score: ".concat(Math.floor(world.lastTimestamp / 10)), canvas.width - fontSize * 11, fontSize * 2.5);
-    context.strokeText("Score: ".concat(Math.floor(world.lastTimestamp / 10)), canvas.width - fontSize * 11, fontSize * 2.5);
-    context.fillText("Flaps used: ".concat(world.flapsUsed), canvas.width - fontSize * 11, fontSize * 4);
-    context.strokeText("Flaps used: ".concat(world.flapsUsed), canvas.width - fontSize * 11, fontSize * 4);
+    context.lineWidth = 2;
+    drawText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - world.fontSize * 11, world.fontSize);
+    drawText("Score: ".concat(Math.floor((world.lastTimestamp - world.gameStarted) / 10)), canvas.width - world.fontSize * 11, world.fontSize * 2.5);
+    drawText("Flaps used: ".concat(world.flapsUsed), canvas.width - world.fontSize * 11, world.fontSize * 4);
+    // Draw game over
+    if (!world.isLooping) {
+        drawText('Game Over', canvas.width / 2 - world.fontSize * 5.5, canvas.height / 2, world.fontSize * 2);
+        drawText('Press spacebar to restart', canvas.width / 2 - world.fontSize * 7.5, canvas.height / 2 + world.fontSize * 1.5);
+    }
 }
 function getHitBoxCoordinatesInCanvasSpace(rotateRad, xOffset) {
     if (rotateRad === void 0) { rotateRad = 0; }

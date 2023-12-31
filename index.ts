@@ -26,6 +26,7 @@ class World {
   #PIPE_SCALE = 4;
   #PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
   #PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+  #FONT_SIZE = canvas.height * 0.05;
 
   dx = 0;
   birdY = canvas.height / 2 - this.#BIRD_HEIGHT / 2;
@@ -37,6 +38,7 @@ class World {
   spaceNeedsHandling = false;
   isLooping = true;
   lastTimestamp = 0;
+  gameStarted = this.lastTimestamp;
   pipes: Pipe[] = [];
   passedPipePositions = new Set<number>();
   flapsUsed = 0;
@@ -77,6 +79,7 @@ class World {
     this.#PIPE_SCALE = 4;
     this.#PIPE_HEIGHT = pipeImag.height * this.#PIPE_SCALE;
     this.#PIPE_WIDTH = pipeImag.width * this.#PIPE_SCALE;
+    this.#FONT_SIZE = canvas.height * 0.05;
   }
 
   reset() {
@@ -87,6 +90,10 @@ class World {
     this.spaceNeedsHandling = false;
     this.isLooping = true;
     this.lastTimestamp = performance.now();
+    this.gameStarted = this.lastTimestamp;
+    this.lastPipeCreated = this.lastTimestamp;
+    this.nextPipeIn = 0;
+    this.pipes = [];
     this.passedPipePositions.clear();
     this.flapsUsed = 0;
   }
@@ -128,6 +135,10 @@ class World {
     return this.#PIPE_WIDTH;
   }
 
+  get fontSize(): number {
+    return this.#FONT_SIZE;
+  }
+
   get birdAngle(): number {
     const birdAngleDeg =
       (Math.max(-600, Math.min(600, -world.birdSpeedY)) / 600) * 50;
@@ -159,6 +170,20 @@ function getBirdCoordinatesInCanvasSpace() {
     x: world.birdX,
     y: world.birdY,
   };
+}
+
+function drawText(
+  text: string,
+  x: number,
+  y: number,
+  fontSize: number = world.fontSize
+) {
+  context.font = `${fontSize}px monospace`;
+  context.fillStyle = 'white';
+  context.strokeStyle = 'black';
+  context.lineWidth = 2;
+  context.fillText(text, x, y);
+  context.strokeText(text, x, y);
 }
 
 function drawImage(
@@ -313,40 +338,37 @@ function draw() {
   // context.fill();
 
   // Draw stats
-  const fontSize = canvas.height * 0.05;
-  context.font = `${fontSize}px monospace`;
-  context.strokeStyle = 'black';
-  context.fillStyle = 'white';
-  context.fillText(
+  context.lineWidth = 2;
+  drawText(
     `Pipes avoided: ${world.passedPipePositions.size}`,
-    canvas.width - fontSize * 11,
-    fontSize
+    canvas.width - world.fontSize * 11,
+    world.fontSize
   );
-  context.strokeText(
-    `Pipes avoided: ${world.passedPipePositions.size}`,
-    canvas.width - fontSize * 11,
-    fontSize
+  drawText(
+    `Score: ${Math.floor((world.lastTimestamp - world.gameStarted) / 10)}`,
+    canvas.width - world.fontSize * 11,
+    world.fontSize * 2.5
   );
-  context.fillText(
-    `Score: ${Math.floor(world.lastTimestamp / 10)}`,
-    canvas.width - fontSize * 11,
-    fontSize * 2.5
-  );
-  context.strokeText(
-    `Score: ${Math.floor(world.lastTimestamp / 10)}`,
-    canvas.width - fontSize * 11,
-    fontSize * 2.5
-  );
-  context.fillText(
+  drawText(
     `Flaps used: ${world.flapsUsed}`,
-    canvas.width - fontSize * 11,
-    fontSize * 4
+    canvas.width - world.fontSize * 11,
+    world.fontSize * 4
   );
-  context.strokeText(
-    `Flaps used: ${world.flapsUsed}`,
-    canvas.width - fontSize * 11,
-    fontSize * 4
-  );
+
+  // Draw game over
+  if (!world.isLooping) {
+    drawText(
+      'Game Over',
+      canvas.width / 2 - world.fontSize * 5.5,
+      canvas.height / 2,
+      world.fontSize * 2
+    );
+    drawText(
+      'Press spacebar to restart',
+      canvas.width / 2 - world.fontSize * 7.5,
+      canvas.height / 2 + world.fontSize * 1.5
+    );
+  }
 }
 
 function getHitBoxCoordinatesInCanvasSpace(
