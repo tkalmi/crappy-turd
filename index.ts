@@ -96,6 +96,8 @@ class World {
     this.pipes = [];
     this.passedPipePositions.clear();
     this.flapsUsed = 0;
+    console.log('Resetting');
+    playAudio('mainTheme', true);
   }
 
   get bgScale(): number {
@@ -147,6 +149,83 @@ class World {
 }
 
 const world = new World();
+
+const audioContext = new AudioContext();
+type AudioKey = 'mainTheme' | 'flap' | 'pipePassed' | 'death';
+const audioLibrary: Partial<Record<AudioKey, AudioBufferSourceNode>> = {};
+const gainNodes: Record<AudioKey, GainNode> = {
+  mainTheme: audioContext.createGain(),
+  flap: audioContext.createGain(),
+  pipePassed: audioContext.createGain(),
+  death: audioContext.createGain(),
+};
+gainNodes.mainTheme.gain.value = 0.6;
+gainNodes.flap.gain.value = 1;
+gainNodes.pipePassed.gain.value = 0.3;
+gainNodes.death.gain.value = 0.8;
+for (const key of Object.keys(gainNodes) as AudioKey[]) {
+  gainNodes[key].connect(audioContext.destination);
+}
+
+function playAudio(key: AudioKey, loop: boolean = false) {
+  const oldBuffer = audioLibrary[key]!;
+  const track = audioContext.createBufferSource();
+  track.buffer = oldBuffer.buffer;
+  audioLibrary[key] = track;
+  const gainNode = gainNodes[key];
+  track.connect(gainNode);
+  if (loop) {
+    track.loop = true;
+  }
+  track.start();
+  audioContext.resume();
+}
+
+function stopAudio(key: AudioKey) {
+  const track = audioLibrary[key]!;
+  track.stop(0);
+}
+
+async function loadAudioBuffers() {
+  const mainThemeAudio = {
+    key: 'mainTheme' as AudioKey,
+    url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+  };
+  const flapAudio = {
+    key: 'flap' as AudioKey,
+    url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+  };
+  const pipePassedAudio = {
+    key: 'pipePassed' as AudioKey,
+    url: '/public/mixkit-unlock-game-notification-253.wav',
+  };
+  const deathAudio = {
+    key: 'death' as AudioKey,
+    url: '/public/mixkit-losing-drums-2023.wav',
+  };
+  const audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
+  for (const { key, url } of audioUrls) {
+    const track = audioContext.createBufferSource();
+    track.buffer = await fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
+    audioLibrary[key] = track;
+  }
+}
+
+const loadingText = document.getElementById('loading') as HTMLParagraphElement;
+loadAudioBuffers().then(() => {
+  loadingText.classList.add('hidden');
+  world.reset();
+  requestAnimationFrame(step);
+});
+
+function die() {
+  world.isLooping = false;
+  canvas.classList.add('game-over');
+  stopAudio('mainTheme');
+  playAudio('death');
+}
 
 type Pipe = {
   t: number;
@@ -350,7 +429,7 @@ function draw() {
     world.fontSize * 2.5
   );
   drawText(
-    `Flaps used: ${world.flapsUsed}`,
+    `Flap counter: ${world.flapsUsed}`,
     canvas.width - world.fontSize * 11,
     world.fontSize * 4
   );
@@ -436,6 +515,7 @@ function step(timestamp: number) {
     world.spaceNeedsHandling = false;
     world.lastFlapAgo = 0;
     world.flapsUsed++;
+    playAudio('flap');
   }
   // Gravity
   world.birdY -= (world.birdSpeedY * dt) / 1_000;
@@ -448,8 +528,12 @@ function step(timestamp: number) {
     if (pipeX > -world.pipeWidth) {
       newPipes.push(pipe);
     }
-    if (pipeX < world.birdX - world.pipeWidth / 2) {
+    if (
+      pipeX < world.birdX - world.pipeWidth / 2 &&
+      !world.passedPipePositions.has(pipe.t)
+    ) {
       // If pipe is passed, add it to
+      playAudio('pipePassed');
       world.passedPipePositions.add(pipe.t);
     }
   }
@@ -501,8 +585,7 @@ function step(timestamp: number) {
       { ...hitbox3, r: world.birdSmallHitBoxRadius }
     )
   ) {
-    world.isLooping = false;
-    canvas.classList.add('game-over');
+    die();
   }
 
   // Detect if hit the floor
@@ -520,8 +603,7 @@ function step(timestamp: number) {
       { ...hitbox3, r: world.birdSmallHitBoxRadius }
     )
   ) {
-    world.isLooping = false;
-    canvas.classList.add('game-over');
+    die();
   }
 
   // Detect if hit a pipe
@@ -542,8 +624,7 @@ function step(timestamp: number) {
         { ...hitbox3, r: world.birdSmallHitBoxRadius }
       )
     ) {
-      world.isLooping = false;
-      canvas.classList.add('game-over');
+      die();
     }
   }
   // Accelerate downwards
@@ -553,5 +634,3 @@ function step(timestamp: number) {
     requestAnimationFrame(step);
   }
 }
-
-requestAnimationFrame(step);

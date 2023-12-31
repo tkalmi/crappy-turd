@@ -9,6 +9,42 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -99,6 +135,8 @@ var World = /** @class */ (function () {
         this.pipes = [];
         this.passedPipePositions.clear();
         this.flapsUsed = 0;
+        console.log('Resetting');
+        playAudio('mainTheme', true);
     };
     Object.defineProperty(World.prototype, "bgScale", {
         get: function () {
@@ -217,6 +255,97 @@ _World_BG_SCALE = new WeakMap(), _World_BIRD_HEIGHT = new WeakMap(), _World_BIRD
     __classPrivateFieldSet(this, _World_FONT_SIZE, canvas.height * 0.05, "f");
 };
 var world = new World();
+var audioContext = new AudioContext();
+var audioLibrary = {};
+var gainNodes = {
+    mainTheme: audioContext.createGain(),
+    flap: audioContext.createGain(),
+    pipePassed: audioContext.createGain(),
+    death: audioContext.createGain(),
+};
+gainNodes.mainTheme.gain.value = 0.6;
+gainNodes.flap.gain.value = 1;
+gainNodes.pipePassed.gain.value = 0.3;
+gainNodes.death.gain.value = 0.8;
+for (var _i = 0, _a = Object.keys(gainNodes); _i < _a.length; _i++) {
+    var key = _a[_i];
+    gainNodes[key].connect(audioContext.destination);
+}
+function playAudio(key, loop) {
+    if (loop === void 0) { loop = false; }
+    var oldBuffer = audioLibrary[key];
+    var track = audioContext.createBufferSource();
+    track.buffer = oldBuffer.buffer;
+    audioLibrary[key] = track;
+    var gainNode = gainNodes[key];
+    track.connect(gainNode);
+    if (loop) {
+        track.loop = true;
+    }
+    track.start();
+    audioContext.resume();
+}
+function stopAudio(key) {
+    var track = audioLibrary[key];
+    track.stop(0);
+}
+function loadAudioBuffers() {
+    return __awaiter(this, void 0, void 0, function () {
+        var mainThemeAudio, flapAudio, pipePassedAudio, deathAudio, audioUrls, _i, audioUrls_1, _a, key, url, track, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    mainThemeAudio = {
+                        key: 'mainTheme',
+                        url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+                    };
+                    flapAudio = {
+                        key: 'flap',
+                        url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+                    };
+                    pipePassedAudio = {
+                        key: 'pipePassed',
+                        url: '/public/mixkit-unlock-game-notification-253.wav',
+                    };
+                    deathAudio = {
+                        key: 'death',
+                        url: '/public/mixkit-losing-drums-2023.wav',
+                    };
+                    audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
+                    _i = 0, audioUrls_1 = audioUrls;
+                    _c.label = 1;
+                case 1:
+                    if (!(_i < audioUrls_1.length)) return [3 /*break*/, 4];
+                    _a = audioUrls_1[_i], key = _a.key, url = _a.url;
+                    track = audioContext.createBufferSource();
+                    _b = track;
+                    return [4 /*yield*/, fetch(url)
+                            .then(function (res) { return res.arrayBuffer(); })
+                            .then(function (arrayBuffer) { return audioContext.decodeAudioData(arrayBuffer); })];
+                case 2:
+                    _b.buffer = _c.sent();
+                    audioLibrary[key] = track;
+                    _c.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+var loadingText = document.getElementById('loading');
+loadAudioBuffers().then(function () {
+    loadingText.classList.add('hidden');
+    world.reset();
+    requestAnimationFrame(step);
+});
+function die() {
+    world.isLooping = false;
+    canvas.classList.add('game-over');
+    stopAudio('mainTheme');
+    playAudio('death');
+}
 function getPipeCoordinatesInCanvasSpace(pipe) {
     var x = canvas.width - (world.lastTimestamp - pipe.t);
     var y = pipe.ceiling
@@ -344,7 +473,7 @@ function draw() {
     context.lineWidth = 2;
     drawText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - world.fontSize * 11, world.fontSize);
     drawText("Score: ".concat(Math.floor((world.lastTimestamp - world.gameStarted) / 10)), canvas.width - world.fontSize * 11, world.fontSize * 2.5);
-    drawText("Flaps used: ".concat(world.flapsUsed), canvas.width - world.fontSize * 11, world.fontSize * 4);
+    drawText("Flap counter: ".concat(world.flapsUsed), canvas.width - world.fontSize * 11, world.fontSize * 4);
     // Draw game over
     if (!world.isLooping) {
         drawText('Game Over', canvas.width / 2 - world.fontSize * 5.5, canvas.height / 2, world.fontSize * 2);
@@ -400,6 +529,7 @@ function step(timestamp) {
         world.spaceNeedsHandling = false;
         world.lastFlapAgo = 0;
         world.flapsUsed++;
+        playAudio('flap');
     }
     // Gravity
     world.birdY -= (world.birdSpeedY * dt) / 1000;
@@ -412,8 +542,10 @@ function step(timestamp) {
         if (pipeX > -world.pipeWidth) {
             newPipes.push(pipe);
         }
-        if (pipeX < world.birdX - world.pipeWidth / 2) {
+        if (pipeX < world.birdX - world.pipeWidth / 2 &&
+            !world.passedPipePositions.has(pipe.t)) {
             // If pipe is passed, add it to
+            playAudio('pipePassed');
             world.passedPipePositions.add(pipe.t);
         }
     }
@@ -444,15 +576,13 @@ function step(timestamp) {
     if (detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
         detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
         detectCollision({ x: 0, w: canvas.width, y: 0, h: 10 }, __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {
-        world.isLooping = false;
-        canvas.classList.add('game-over');
+        die();
     }
     // Detect if hit the floor
     if (detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
         detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
         detectCollision({ x: 0, w: canvas.width, y: canvas.height - 30, h: 10 }, __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {
-        world.isLooping = false;
-        canvas.classList.add('game-over');
+        die();
     }
     // Detect if hit a pipe
     for (var _b = 0, _c = world.pipes; _b < _c.length; _b++) {
@@ -461,8 +591,7 @@ function step(timestamp) {
         if (detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
             detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
             detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox3), { r: world.birdSmallHitBoxRadius }))) {
-            world.isLooping = false;
-            canvas.classList.add('game-over');
+            die();
         }
     }
     // Accelerate downwards
@@ -472,4 +601,3 @@ function step(timestamp) {
         requestAnimationFrame(step);
     }
 }
-requestAnimationFrame(step);
