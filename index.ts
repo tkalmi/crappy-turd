@@ -38,6 +38,8 @@ class World {
   isLooping = true;
   lastTimestamp = 0;
   pipes: Pipe[] = [];
+  passedPipePositions = new Set<number>();
+  flapsUsed = 0;
 
   constructor() {
     this.#init();
@@ -85,6 +87,8 @@ class World {
     this.spaceNeedsHandling = false;
     this.isLooping = true;
     this.lastTimestamp = performance.now();
+    this.passedPipePositions.clear();
+    this.flapsUsed = 0;
   }
 
   get bgScale(): number {
@@ -307,6 +311,42 @@ function draw() {
   // context.rect(0, canvas.height - 30, canvas.width, 10);
   // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
   // context.fill();
+
+  // Draw stats
+  const fontSize = canvas.height * 0.05;
+  context.font = `${fontSize}px monospace`;
+  context.strokeStyle = 'black';
+  context.fillStyle = 'white';
+  context.fillText(
+    `Pipes avoided: ${world.passedPipePositions.size}`,
+    canvas.width - fontSize * 11,
+    fontSize
+  );
+  context.strokeText(
+    `Pipes avoided: ${world.passedPipePositions.size}`,
+    canvas.width - fontSize * 11,
+    fontSize
+  );
+  context.fillText(
+    `Score: ${Math.floor(world.lastTimestamp / 10)}`,
+    canvas.width - fontSize * 11,
+    fontSize * 2.5
+  );
+  context.strokeText(
+    `Score: ${Math.floor(world.lastTimestamp / 10)}`,
+    canvas.width - fontSize * 11,
+    fontSize * 2.5
+  );
+  context.fillText(
+    `Flaps used: ${world.flapsUsed}`,
+    canvas.width - fontSize * 11,
+    fontSize * 4
+  );
+  context.strokeText(
+    `Flaps used: ${world.flapsUsed}`,
+    canvas.width - fontSize * 11,
+    fontSize * 4
+  );
 }
 
 function getHitBoxCoordinatesInCanvasSpace(
@@ -373,16 +413,25 @@ function step(timestamp: number) {
     world.birdSpeedY = Math.min(world.birdSpeedY + 600, 600);
     world.spaceNeedsHandling = false;
     world.lastFlapAgo = 0;
+    world.flapsUsed++;
   }
   // Gravity
   world.birdY -= (world.birdSpeedY * dt) / 1_000;
   world.birdY = Math.max(46, world.birdY);
 
   // Delete pipes that are off-screen
-  world.pipes = world.pipes.filter(
-    (pipe) =>
-      world.pipeWidth + canvas.width - (timestamp - pipe.t) > -world.pipeWidth
-  );
+  const newPipes: Pipe[] = [];
+  for (const pipe of world.pipes) {
+    const pipeX = world.pipeWidth + canvas.width - (timestamp - pipe.t);
+    if (pipeX > -world.pipeWidth) {
+      newPipes.push(pipe);
+    }
+    if (pipeX < world.birdX - world.pipeWidth / 2) {
+      // If pipe is passed, add it to
+      world.passedPipePositions.add(pipe.t);
+    }
+  }
+
   // Generate new pipes
   if (timestamp - world.lastPipeCreated > world.nextPipeIn) {
     const pipeHeight =

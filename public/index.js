@@ -62,6 +62,8 @@ var World = /** @class */ (function () {
         this.isLooping = true;
         this.lastTimestamp = 0;
         this.pipes = [];
+        this.passedPipePositions = new Set();
+        this.flapsUsed = 0;
         __classPrivateFieldGet(this, _World_instances, "m", _World_init).call(this);
         addEventListener('resize', function () {
             __classPrivateFieldGet(_this, _World_instances, "m", _World_init).call(_this);
@@ -89,6 +91,8 @@ var World = /** @class */ (function () {
         this.spaceNeedsHandling = false;
         this.isLooping = true;
         this.lastTimestamp = performance.now();
+        this.passedPipePositions.clear();
+        this.flapsUsed = 0;
     };
     Object.defineProperty(World.prototype, "bgScale", {
         get: function () {
@@ -313,6 +317,17 @@ function draw() {
     // context.rect(0, canvas.height - 30, canvas.width, 10);
     // context.fillStyle = `rgba(0, 0, 255, ${shadowScale * 0.9})`;
     // context.fill();
+    // Draw stats
+    var fontSize = canvas.height * 0.05;
+    context.font = "".concat(fontSize, "px monospace");
+    context.strokeStyle = 'black';
+    context.fillStyle = 'white';
+    context.fillText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - fontSize * 11, fontSize);
+    context.strokeText("Pipes avoided: ".concat(world.passedPipePositions.size), canvas.width - fontSize * 11, fontSize);
+    context.fillText("Score: ".concat(Math.floor(world.lastTimestamp / 10)), canvas.width - fontSize * 11, fontSize * 2.5);
+    context.strokeText("Score: ".concat(Math.floor(world.lastTimestamp / 10)), canvas.width - fontSize * 11, fontSize * 2.5);
+    context.fillText("Flaps used: ".concat(world.flapsUsed), canvas.width - fontSize * 11, fontSize * 4);
+    context.strokeText("Flaps used: ".concat(world.flapsUsed), canvas.width - fontSize * 11, fontSize * 4);
 }
 function getHitBoxCoordinatesInCanvasSpace(rotateRad, xOffset) {
     if (rotateRad === void 0) { rotateRad = 0; }
@@ -362,14 +377,24 @@ function step(timestamp) {
         world.birdSpeedY = Math.min(world.birdSpeedY + 600, 600);
         world.spaceNeedsHandling = false;
         world.lastFlapAgo = 0;
+        world.flapsUsed++;
     }
     // Gravity
     world.birdY -= (world.birdSpeedY * dt) / 1000;
     world.birdY = Math.max(46, world.birdY);
     // Delete pipes that are off-screen
-    world.pipes = world.pipes.filter(function (pipe) {
-        return world.pipeWidth + canvas.width - (timestamp - pipe.t) > -world.pipeWidth;
-    });
+    var newPipes = [];
+    for (var _i = 0, _a = world.pipes; _i < _a.length; _i++) {
+        var pipe = _a[_i];
+        var pipeX = world.pipeWidth + canvas.width - (timestamp - pipe.t);
+        if (pipeX > -world.pipeWidth) {
+            newPipes.push(pipe);
+        }
+        if (pipeX < world.birdX - world.pipeWidth / 2) {
+            // If pipe is passed, add it to
+            world.passedPipePositions.add(pipe.t);
+        }
+    }
     // Generate new pipes
     if (timestamp - world.lastPipeCreated > world.nextPipeIn) {
         var pipeHeight = Math.random() * canvas.height * 0.3 + canvas.height * 0.2;
@@ -408,8 +433,8 @@ function step(timestamp) {
         canvas.classList.add('game-over');
     }
     // Detect if hit a pipe
-    for (var _i = 0, _a = world.pipes; _i < _a.length; _i++) {
-        var pipeObj = _a[_i];
+    for (var _b = 0, _c = world.pipes; _b < _c.length; _b++) {
+        var pipeObj = _c[_b];
         var pipe = getPipeCoordinatesInCanvasSpace(pipeObj);
         if (detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox1), { r: world.birdBigHitBoxRadius })) ||
             detectCollision(__assign(__assign({}, pipe), { w: world.pipeWidth, h: world.pipeHeight }), __assign(__assign({}, hitbox2), { r: world.birdSmallHitBoxRadius })) ||
