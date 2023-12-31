@@ -3,18 +3,19 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 const startText = document.getElementById('start-game') as HTMLParagraphElement;
+const BASE_URL = window.location.origin;
 const backgroundImage = new Image();
-backgroundImage.src = 'public/background.png';
+backgroundImage.src = `${BASE_URL}/public/background.png`;
 const bird1 = new Image();
-bird1.src = 'public/bird_1.png';
+bird1.src = `${BASE_URL}/public/bird_1.png`;
 const bird2 = new Image();
-bird2.src = 'public/bird_2.png';
+bird2.src = `${BASE_URL}/public/bird_2.png`;
 const bird3 = new Image();
-bird3.src = 'public/bird_3.png';
+bird3.src = `${BASE_URL}/public/bird_3.png`;
 const bird4 = new Image();
-bird4.src = 'public/bird_4.png';
+bird4.src = `${BASE_URL}/public/bird_4.png`;
 const pipeImag = new Image();
-pipeImag.src = 'public/pipe.png';
+pipeImag.src = `${BASE_URL}/public/pipe.png`;
 const loadingText = document.getElementById('loading') as HTMLParagraphElement;
 
 /******************************************************************************/
@@ -60,25 +61,28 @@ function stopAudio(key: AudioKey) {
 async function loadAudioBuffers() {
   const mainThemeAudio = {
     key: 'mainTheme' as AudioKey,
-    url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+    url: `${BASE_URL}/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3`,
   };
   const flapAudio = {
     key: 'flap' as AudioKey,
-    url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+    url: `${BASE_URL}/public/mixkit-quick-jump-arcade-game-239.wav`,
   };
   const pipePassedAudio = {
     key: 'pipePassed' as AudioKey,
-    url: '/public/mixkit-unlock-game-notification-253.wav',
+    url: `${BASE_URL}/public/mixkit-unlock-game-notification-253.wav`,
   };
   const deathAudio = {
     key: 'death' as AudioKey,
-    url: '/public/mixkit-losing-drums-2023.wav',
+    url: `${BASE_URL}/public/mixkit-losing-drums-2023.wav`,
   };
   const audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
   for (const { key, url } of audioUrls) {
     const track = audioContext.createBufferSource();
     track.buffer = await fetch(url)
-      .then((res) => res.arrayBuffer())
+      .then((res) => {
+        console.log('RES', res);
+        return res.arrayBuffer();
+      })
       .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
     audioLibrary[key] = track;
   }

@@ -61,18 +61,19 @@ var _World_instances, _World_BG_SCALE, _World_BIRD_HEIGHT, _World_BIRD_SCALE, _W
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var startText = document.getElementById('start-game');
+var BASE_URL = window.location.origin;
 var backgroundImage = new Image();
-backgroundImage.src = 'public/background.png';
+backgroundImage.src = "".concat(BASE_URL, "/public/background.png");
 var bird1 = new Image();
-bird1.src = 'public/bird_1.png';
+bird1.src = "".concat(BASE_URL, "/public/bird_1.png");
 var bird2 = new Image();
-bird2.src = 'public/bird_2.png';
+bird2.src = "".concat(BASE_URL, "/public/bird_2.png");
 var bird3 = new Image();
-bird3.src = 'public/bird_3.png';
+bird3.src = "".concat(BASE_URL, "/public/bird_3.png");
 var bird4 = new Image();
-bird4.src = 'public/bird_4.png';
+bird4.src = "".concat(BASE_URL, "/public/bird_4.png");
 var pipeImag = new Image();
-pipeImag.src = 'public/pipe.png';
+pipeImag.src = "".concat(BASE_URL, "/public/pipe.png");
 var loadingText = document.getElementById('loading');
 /******************************************************************************/
 /* Audio */
@@ -118,19 +119,19 @@ function loadAudioBuffers() {
                 case 0:
                     mainThemeAudio = {
                         key: 'mainTheme',
-                        url: '/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3',
+                        url: "".concat(BASE_URL, "/public/Pixel-Peeker-Polka-faster-Kevin_MacLeod(chosic.com).mp3"),
                     };
                     flapAudio = {
                         key: 'flap',
-                        url: '/public/mixkit-quick-jump-arcade-game-239.wav',
+                        url: "".concat(BASE_URL, "/public/mixkit-quick-jump-arcade-game-239.wav"),
                     };
                     pipePassedAudio = {
                         key: 'pipePassed',
-                        url: '/public/mixkit-unlock-game-notification-253.wav',
+                        url: "".concat(BASE_URL, "/public/mixkit-unlock-game-notification-253.wav"),
                     };
                     deathAudio = {
                         key: 'death',
-                        url: '/public/mixkit-losing-drums-2023.wav',
+                        url: "".concat(BASE_URL, "/public/mixkit-losing-drums-2023.wav"),
                     };
                     audioUrls = [mainThemeAudio, flapAudio, pipePassedAudio, deathAudio];
                     _i = 0, audioUrls_1 = audioUrls;
@@ -141,7 +142,10 @@ function loadAudioBuffers() {
                     track = audioContext.createBufferSource();
                     _b = track;
                     return [4 /*yield*/, fetch(url)
-                            .then(function (res) { return res.arrayBuffer(); })
+                            .then(function (res) {
+                            console.log('RES', res);
+                            return res.arrayBuffer();
+                        })
                             .then(function (arrayBuffer) { return audioContext.decodeAudioData(arrayBuffer); })];
                 case 2:
                     _b.buffer = _c.sent();
