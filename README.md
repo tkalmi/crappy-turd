@@ -1,4 +1,4 @@
-a# Crappy Turd
+# Crappy Turd
 
 Like Flappy Bird, but crappier. Play it at
 <a href="https://tkalmi.github.io/crappy-turd">https://tkalmi.github.io/crappy-turd</a>
